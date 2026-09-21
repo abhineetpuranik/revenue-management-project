@@ -1,0 +1,65 @@
+# =============================================================================
+# Root .gitignore — covers all three stacks (Python, Flask, Angular)
+# =============================================================================
+
+# ── Python / data-pipeline & backend ─────────────────────────────────────────
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.so
+*.egg
+*.egg-info/
+dist/
+build/
+.eggs/
+# Virtual environments (any common name)
+venv/
+.venv/
+env/
+.env/
+ENV/
+
+# ── Environment / secrets ─────────────────────────────────────────────────────
+.env
+*.env
+!.env.example
+
+# ── Pytest ────────────────────────────────────────────────────────────────────
+.pytest_cache/
+.coverage
+htmlcov/
+
+# ── Node / Angular (frontend/) ────────────────────────────────────────────────
+node_modules/
+# Angular build output
+dist/
+.angular/
+# Angular SSR server build
+.angular/cache/
+
+# ── IDE / editor ──────────────────────────────────────────────────────────────
+.vscode/*
+!.vscode/extensions.json
+!.vscode/launch.json
+!.vscode/tasks.json
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# ── OS ────────────────────────────────────────────────────────────────────────
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# ── Logs ──────────────────────────────────────────────────────────────────────
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# ── MySQL ─────────────────────────────────────────────────────────────────────
+*.sql.bak

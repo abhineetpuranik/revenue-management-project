@@ -1,0 +1,29 @@
+-- =============================================================================
+-- Revenue Management — Database Schema Placeholder
+-- Phase 0: Table definitions are NOT implemented yet.
+-- DDL will be added in a later phase once the data model is finalised.
+-- =============================================================================
+--
+-- Planned tables (subject to change during design phase):
+--
+--   sales_fact      — central fact table recording individual sales transactions
+--                     (sale_id, product_id, customer_id, price_id, quantity,
+--                      sale_date, revenue, store_id)
+--
+--   product         — product dimension
+--                     (product_id, name, category, cost_price, current_price,
+--                      stock_quantity, reorder_level)
+--
+--   customer        — customer dimension, supports RFM segmentation
+--                     (customer_id, name, email, registration_date, segment_label,
+--                      rfm_score)
+--
+--   price           — historical price records for elasticity analysis
+--                     (price_id, product_id, price_value, valid_from, valid_to,
+--                      pricing_strategy)
+--
+--   stock           — stock-level tracking over time
+--                     (stock_id, product_id, quantity_on_hand, recorded_at,
+--                      warehouse_location)
+--
+-- =============================================================================
