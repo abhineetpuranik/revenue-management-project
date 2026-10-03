@@ -204,3 +204,82 @@ FESTIVAL_DATES: list[str] = [
     # Summer Bank Holiday UK (last Monday of August)
     "2022-08-29", "2023-08-28", "2024-08-26",
 ]
+
+# ---------------------------------------------------------------------------
+# Phase 1b — Transactional table configuration
+# ---------------------------------------------------------------------------
+
+# ── Price table ─────────────────────────────────────────────────────────────
+
+# How often (in days) a product's price is eligible to change.
+# A product's price is reviewed every PRICE_CHANGE_INTERVAL_DAYS days;
+# a new price is drawn if the random trigger fires (see PRICE_CHANGE_PROB).
+PRICE_CHANGE_INTERVAL_DAYS: int = 14       # fortnightly review
+
+# Probability that a price actually changes on a review date.
+# ~60 % of reviews result in a real price change, giving ~78 changes per
+# product over 3 years — enough variation for elasticity estimation.
+PRICE_CHANGE_PROB: float = 0.60
+
+# Price changes are drawn from a Gaussian centred on the current price.
+# The std is expressed as a fraction of base_price so cheap and expensive
+# products get proportionally similar variation.
+PRICE_CHANGE_STD_FRAC: float = 0.08       # ±8 % std around current price
+
+# Hard bounds: price is always kept within [BASE × lo, BASE × hi].
+PRICE_MIN_FRAC: float = 0.70              # floor at 70 % of base_price
+PRICE_MAX_FRAC: float = 1.40              # ceiling at 140 % of base_price
+
+# ── Discount / promotion ────────────────────────────────────────────────────
+
+# Independent of the regular price schedule, a product-date may receive a
+# promotional discount flagged in the Sales table.
+# Probability that any given product-date has a promotion.
+PROMO_PROB: float = 0.05                  # 5 % of product-days are on promo
+
+# Discount depth: uniform draw between these two fractions of current price.
+PROMO_DISCOUNT_MIN: float = 0.05          # minimum 5 % off
+PROMO_DISCOUNT_MAX: float = 0.25          # maximum 25 % off
+
+# Demand uplift multiplier applied on top of elasticity when a promo is live.
+# Captures display / marketing effect beyond pure price elasticity.
+PROMO_DEMAND_UPLIFT: float = 1.20         # +20 % lift on promo days
+
+# ── Demand / Poisson noise ───────────────────────────────────────────────────
+
+# Festival-day demand uplift multiplier (applied additively on top of
+# combined_factor when festival_flag == 1).
+FESTIVAL_DEMAND_UPLIFT: float = 1.25      # +25 % on festival dates
+
+# Minimum expected demand per product-day before Poisson draw.
+# Prevents degenerate lambda=0 inputs to the Poisson sampler.
+MIN_EXPECTED_DEMAND: float = 0.01
+
+# ── Customer attribution ─────────────────────────────────────────────────────
+
+# When distributing a day's total units_sold across customers we use each
+# customer's purchase_rate as their relative weight.  To keep the attribution
+# tractable on a standard laptop without iterating over all 1 000 customers
+# × 50 products × 1 096 days, we use a two-step approach:
+#
+#   Step 1 (product-day level): compute total units_sold via vectorised numpy.
+#   Step 2 (attribution): for each product-day with units_sold > 0, draw a
+#           multinomial split across the customer pool using purchase_rate
+#           weights, then keep only non-zero assignments as individual rows.
+#
+# To bound memory use, customers with zero assigned units on a given product-
+# day are dropped (sparse representation).  This is the correct real-world
+# model: most customers don't buy every product every day.
+
+# ── Stock table ──────────────────────────────────────────────────────────────
+
+# Initial stock quantity per product at the start of the simulation.
+# Set high enough that stockouts are rare but not impossible.
+INITIAL_STOCK_MULTIPLIER: int = 30        # initial_stock = base_demand × 30
+
+# Restock is triggered every RESTOCK_INTERVAL_DAYS days.
+RESTOCK_INTERVAL_DAYS: int = 7            # weekly restock
+
+# Restock quantity: enough to cover expected demand for the next restock
+# period plus a safety buffer.
+RESTOCK_PERIOD_MULTIPLIER: float = 1.5    # replenish 1.5× expected weekly demand
