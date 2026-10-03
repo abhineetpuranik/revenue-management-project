@@ -1,0 +1,51 @@
+product_id,category,base_price,base_demand,true_elasticity
+P001,Staples,3.98,39,-0.4059
+P002,Staples,0.92,46,-0.5853
+P003,Staples,2.17,51,-0.3873
+P004,Staples,2.5,34,-0.5959
+P005,Staples,4.22,42,-0.5681
+P006,Staples,4.87,49,-0.5352
+P007,Staples,2.6,25,-0.4569
+P008,Staples,3.85,58,-0.5814
+P009,Staples,2.61,33,-0.584
+P010,Staples,1.52,43,-0.4457
+P011,Staples,4.25,46,-0.4781
+P012,Staples,3.57,32,-0.4932
+P013,Personal Care,12.23,22,-1.048
+P014,Personal Care,7.97,21,-0.7758
+P015,Personal Care,10.69,20,-1.0502
+P016,Personal Care,10.25,21,-0.881
+P017,Personal Care,2.4,19,-1.0287
+P018,Personal Care,13.09,16,-0.9254
+P019,Personal Care,5.82,22,-0.9762
+P020,Personal Care,10.64,19,-1.0993
+P021,Personal Care,2.3,13,-0.927
+P022,Personal Care,4.1,20,-0.933
+P023,Electronics,250.77,4,-1.7645
+P024,Electronics,482.85,8,-1.5678
+P025,Electronics,255.1,3,-1.7892
+P026,Electronics,391.33,5,-1.4641
+P027,Electronics,68.73,3,-1.7378
+P028,Electronics,126.77,4,-1.7942
+P029,Electronics,267.04,6,-1.4465
+P030,Electronics,199.21,2,-1.2868
+P031,Clothing,72.73,6,-2.1349
+P032,Clothing,57.06,8,-1.4464
+P033,Clothing,63.81,7,-1.945
+P034,Clothing,35.96,8,-1.8082
+P035,Clothing,75.52,6,-2.0451
+P036,Clothing,79.47,10,-1.7561
+P037,Clothing,56.32,9,-1.4928
+P038,Clothing,28.37,16,-1.4698
+P039,Clothing,68.18,6,-1.5077
+P040,Clothing,71.22,7,-1.6713
+P041,Impulse,7.79,25,-1.9156
+P042,Impulse,2.22,18,-2.5125
+P043,Impulse,4.3,28,-2.2195
+P044,Impulse,6.53,28,-1.9923
+P045,Impulse,1.43,34,-2.0819
+P046,Impulse,4.16,22,-2.056
+P047,Impulse,4.66,27,-1.9774
+P048,Impulse,3.64,34,-2.3659
+P049,Impulse,6.39,30,-2.5368
+P050,Impulse,4.48,27,-1.4472
