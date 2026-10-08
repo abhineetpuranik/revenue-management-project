@@ -1,0 +1,41 @@
+{
+  "model_type": "XGBoost",
+  "selected_reason": "XGBoost wins on RMSE (21.190 vs 24.263, 12.7% improvement)",
+  "xgb_won": true,
+  "train_start": "2022-01-17",
+  "train_end": "2024-10-28",
+  "test_start": "2024-11-04",
+  "test_end": "2024-12-23",
+  "n_train": 7300,
+  "n_test": 400,
+  "metrics": {
+    "XGBoost": {
+      "mae": 14.7333,
+      "rmse": 21.1903,
+      "mape": 9.7208
+    },
+    "LinearRegression": {
+      "mae": 17.6535,
+      "rmse": 24.2629,
+      "mape": 15.261
+    }
+  },
+  "feature_cols": [
+    "lag_1_units",
+    "lag_2_units",
+    "lag_3_units",
+    "month",
+    "month_sin",
+    "month_cos",
+    "seasonal_factor_mean",
+    "festival_week",
+    "list_price_mean",
+    "price_change_pct",
+    "avg_discount_price",
+    "promo_days",
+    "avg_price",
+    "avg_discount"
+  ],
+  "test_weeks": 8,
+  "trained_at": "2026-10-08 12:02:39"
+}
