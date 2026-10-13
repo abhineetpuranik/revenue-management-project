@@ -159,6 +159,45 @@ CREATE TABLE sales (
 ) ENGINE=InnoDB;
 
 
+-- ------------------------------------------------------------
+-- 2d. customer_rfm_segment  — Phase 6 (segmentation/run_segmentation.py)
+--     RFM values + K-Means cluster + business label per customer.
+--     Also created at run time (CREATE TABLE IF NOT EXISTS).
+-- ------------------------------------------------------------
+CREATE TABLE customer_rfm_segment (
+    customer_id     VARCHAR(10)    NOT NULL,
+    recency_days    INT            NOT NULL,
+    frequency       INT            NOT NULL,   -- distinct purchase dates
+    monetary        DECIMAL(14,2)  NOT NULL,   -- total revenue
+    cluster_id      INT            NOT NULL,
+    segment_label   VARCHAR(20)    NOT NULL,   -- high_value|regular|occasional|at_risk
+    assigned_at     DATETIME       NOT NULL,
+    CONSTRAINT pk_customer_rfm_segment PRIMARY KEY (customer_id),
+    CONSTRAINT fk_rfm_segment_customer FOREIGN KEY (customer_id) REFERENCES customer(customer_id),
+    INDEX idx_rfm_segment_label (segment_label)
+) ENGINE=InnoDB;
+
+
+-- ------------------------------------------------------------
+-- 2e. segment_summary  — Phase 6; one row per segment label.
+--     Structured input for the Phase 9 LLM explanations.
+-- ------------------------------------------------------------
+CREATE TABLE segment_summary (
+    segment_label        VARCHAR(20)    NOT NULL,
+    customer_count       INT            NOT NULL,
+    share_pct            DECIMAL(6,2)   NOT NULL,
+    mean_recency_days    DECIMAL(10,2)  NOT NULL,
+    median_recency_days  DECIMAL(10,2)  NOT NULL,
+    mean_frequency       DECIMAL(10,2)  NOT NULL,
+    median_frequency     DECIMAL(10,2)  NOT NULL,
+    mean_monetary        DECIMAL(14,2)  NOT NULL,
+    median_monetary      DECIMAL(14,2)  NOT NULL,
+    total_revenue        DECIMAL(16,2)  NOT NULL,
+    revenue_share_pct    DECIMAL(6,2)   NOT NULL,
+    assigned_at          DATETIME       NOT NULL,
+    CONSTRAINT pk_segment_summary PRIMARY KEY (segment_label)
+) ENGINE=InnoDB;
+
 -- ============================================================
 -- 3. Ground-truth holdout schema
 --    IMPORTANT: these tables must NEVER be joined in application
