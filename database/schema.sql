@@ -228,6 +228,27 @@ CREATE TABLE IF NOT EXISTS product_elasticity (
     CONSTRAINT fk_elasticity_product FOREIGN KEY (product_id) REFERENCES product(product_id)
 ) ENGINE=InnoDB;
 
+-- ------------------------------------------------------------
+-- 4b. pricing_candidates  — Phase 8a (pricing/build_candidates.py)
+--     Every candidate price per product, INCLUDING rejected ones,
+--     with the reason codes it failed (MARGIN, MAX_CHANGE,
+--     PRICE_RANGE, ELASTICITY_UNRELIABLE). step = % step from
+--     the current price (0 = current price).
+-- ------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS pricing_candidates (
+    product_id       VARCHAR(10)    NOT NULL,
+    step             INT            NOT NULL,
+    candidate_price  DECIMAL(10,2)  NOT NULL,
+    change_pct       DECIMAL(8,4)   NOT NULL,
+    unit_cost        DECIMAL(10,4)  NOT NULL,   -- ASSUMED: base_price x COST_RATIO[category]
+    margin_pct       DECIMAL(8,4)   NOT NULL,
+    is_current       TINYINT(1)     NOT NULL,
+    passes_all       TINYINT(1)     NOT NULL,
+    failed_reasons   VARCHAR(100)   NOT NULL DEFAULT '',
+    CONSTRAINT pk_pricing_candidates PRIMARY KEY (product_id, step),
+    CONSTRAINT fk_candidates_product FOREIGN KEY (product_id) REFERENCES product(product_id)
+) ENGINE=InnoDB;
+
 -- ============================================================
 -- End of schema
 -- ============================================================
