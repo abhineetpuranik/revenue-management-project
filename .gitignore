@@ -63,3 +63,7 @@ yarn-error.log*
 
 # ── MySQL ─────────────────────────────────────────────────────────────────────
 *.sql.bak
+
+# Generated data (regenerate with the scripts)
+data-pipeline/data/raw/
+data-pipeline/data/cleaned/
