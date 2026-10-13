@@ -91,7 +91,8 @@ def get_gt_engine() -> Engine:
     """
     Return a cached SQLAlchemy Engine for the ground-truth holdout schema.
 
-    This engine should only be used by Phase 6 / Phase 7 evaluation scripts.
+    This engine should only be used by the validate_*.py evaluation scripts
+    (Phase 6 segmentation, Phase 7 elasticity, Phase 8b pricing sanity check).
     Application code and model-training code must use get_engine() instead.
     """
     name = os.getenv("DB_GT_NAME", "revenue_management_gt")
