@@ -267,6 +267,60 @@ CREATE TABLE IF NOT EXISTS product_elasticity (
     CONSTRAINT fk_elasticity_product FOREIGN KEY (product_id) REFERENCES product(product_id)
 ) ENGINE=InnoDB;
 
+-- ------------------------------------------------------------
+-- 4b. pricing_candidates  — Phase 8a (pricing/build_candidates.py)
+--     Every candidate price per product, INCLUDING rejected ones,
+--     with the reason codes it failed (MARGIN, MAX_CHANGE,
+--     PRICE_RANGE, ELASTICITY_UNRELIABLE). step = % step from
+--     the current price (0 = current price).
+-- ------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS pricing_candidates (
+    product_id       VARCHAR(10)    NOT NULL,
+    step             INT            NOT NULL,
+    candidate_price  DECIMAL(10,2)  NOT NULL,
+    change_pct       DECIMAL(8,4)   NOT NULL,
+    unit_cost        DECIMAL(10,4)  NOT NULL,   -- ASSUMED: base_price x COST_RATIO[category]
+    margin_pct       DECIMAL(8,4)   NOT NULL,
+    is_current       TINYINT(1)     NOT NULL,
+    passes_all       TINYINT(1)     NOT NULL,
+    failed_reasons   VARCHAR(100)   NOT NULL DEFAULT '',
+    CONSTRAINT pk_pricing_candidates PRIMARY KEY (product_id, step),
+    CONSTRAINT fk_candidates_product FOREIGN KEY (product_id) REFERENCES product(product_id)
+) ENGINE=InnoDB;
+
+-- ------------------------------------------------------------
+-- 4c. pricing_recommendation  — Phase 8b (pricing/run_pricing.py)
+--     One revenue-maximising price per product for the forecast
+--     week, with expected impact and the constraint that stopped it.
+--     binding_constraint: MAX_CHANGE | MARGIN | PRICE_RANGE |
+--       STOCK | TIE_TOLERANCE | NONE | NO_FEASIBLE_PRICE
+-- ------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS pricing_recommendation (
+    product_id          VARCHAR(10)    NOT NULL,
+    category            VARCHAR(30)    NOT NULL,
+    current_price       DECIMAL(10,2)  NOT NULL,
+    recommended_price   DECIMAL(10,2)  NOT NULL,
+    change_pct          DECIMAL(8,4)   NOT NULL,
+    elasticity          DECIMAL(8,4)   NOT NULL,
+    baseline_demand     DECIMAL(12,2)  NOT NULL,   -- Phase 5 forecast at the current price
+    expected_demand     DECIMAL(12,2)  NOT NULL,   -- at the recommended price
+    available_stock     INT            NOT NULL,
+    current_revenue     DECIMAL(14,2)  NOT NULL,
+    expected_revenue    DECIMAL(14,2)  NOT NULL,
+    revenue_change_pct  DECIMAL(8,4)   NOT NULL,
+    unit_cost           DECIMAL(10,4)  NOT NULL,   -- ASSUMED cost (see pricing_config.py)
+    margin_pct          DECIMAL(8,4)   NOT NULL,
+    expected_profit     DECIMAL(14,2)  NOT NULL,
+    stock_limited       TINYINT(1)     NOT NULL,
+    binding_constraint  VARCHAR(30)    NOT NULL,
+    reason_codes        VARCHAR(100)   NOT NULL DEFAULT '',
+    model_type          VARCHAR(30)    NOT NULL,
+    forecast_week       VARCHAR(10)    NOT NULL,   -- e.g. 2025-W01
+    generated_at        DATETIME       NOT NULL,
+    CONSTRAINT pk_pricing_recommendation PRIMARY KEY (product_id),
+    CONSTRAINT fk_recommendation_product FOREIGN KEY (product_id) REFERENCES product(product_id)
+) ENGINE=InnoDB;
+
 -- ============================================================
 -- End of schema
 -- ============================================================
