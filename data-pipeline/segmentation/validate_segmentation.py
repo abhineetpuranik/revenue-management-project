@@ -1,15 +1,3 @@
-"""
-Segmentation validation — Phase 6 (Module 3).
-
-THE ONLY Phase 6 FILE ALLOWED TO READ GROUND TRUTH
-(revenue_management_gt.gt_customer_segment).
-
-Reports: confusion matrix (assigned label vs. true_segment), overall label
-accuracy, per-segment precision / recall, Adjusted Rand Index and Normalized
-Mutual Information (label-independent — they judge the grouping itself, not
-the names given to the groups), and the Silhouette score passed in.
-"""
-
 from __future__ import annotations
 
 import sys
@@ -59,7 +47,6 @@ def compute_metrics(assigned: pd.DataFrame, gt: pd.DataFrame,
 
 def run_validation(assigned: pd.DataFrame, silhouette: float,
                    alternatives: dict[str, pd.DataFrame] | None = None) -> dict:
-    """Print the validation report. `alternatives` = {name: frame with cluster_id} for ARI comparison."""
     gt = load_ground_truth()
     met = compute_metrics(assigned, gt)
 

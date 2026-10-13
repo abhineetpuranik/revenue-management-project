@@ -1,27 +1,3 @@
-"""
-Phase 6 orchestrator — customer segmentation (Module 3).
-
-Steps
------
-1. RFM per customer from MySQL (rfm.compute_rfm)
-2. Decide whether recency is informative (clustering.recency_is_informative)
-3. k search 2..10: inertia + Silhouette; elbow and Silhouette plots
-4. Production model: K-Means with k = 4 (flagged if the evidence prefers another k)
-5. Label clusters from centroids only (labeling.label_clusters)
-6. Save customer_rfm_segment + segment_summary (MySQL, delete-and-reload in one
-   transaction) and CSVs in data/segmentation/
-7. Validate against ground truth (validate_segmentation — the only GT reader)
-
-Run
----
-    cd data-pipeline
-    python -m segmentation.run_segmentation
-
-Public interface (Phase 9 / Phase 10)
--------------------------------------
-    from segmentation.run_segmentation import get_customer_segment, get_segment_summary
-"""
-
 from __future__ import annotations
 
 import logging
@@ -31,7 +7,7 @@ from datetime import datetime
 from pathlib import Path
 
 import matplotlib
-matplotlib.use("Agg")                      # headless: write PNGs, never open a window
+matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import pandas as pd
 from sklearn.metrics import silhouette_score
@@ -57,7 +33,6 @@ OUTPUT_DIR = _PIPELINE_ROOT / "data" / "segmentation"
 SEGMENT_TABLE = "customer_rfm_segment"
 SUMMARY_TABLE = "segment_summary"
 
-# Kept identical to database/schema.sql (sections 2d / 2e).
 CREATE_SEGMENT_SQL = """
 CREATE TABLE IF NOT EXISTS customer_rfm_segment (
     customer_id     VARCHAR(10)    NOT NULL,
@@ -92,13 +67,13 @@ CREATE TABLE IF NOT EXISTS segment_summary (
 
 
 def _section(title: str) -> None:
-    print(f"\n{'=' * 66}\n  {title}\n{'=' * 66}")
+    print(f"\n--- {title} ---")
 
 
 def save_plots(search: pd.DataFrame, chosen: dict, out_dir: Path) -> None:
     out_dir.mkdir(parents=True, exist_ok=True)
     for col, fname, title, mark in [
-        ("inertia", "elbow_plot.png", "Elbow method — K-Means inertia", chosen["elbow_k"]),
+        ("inertia", "elbow_plot.png", "Elbow method - K-Means inertia", chosen["elbow_k"]),
         ("silhouette", "silhouette_plot.png", "Silhouette score by k", chosen["silhouette_k"]),
     ]:
         fig, ax = plt.subplots(figsize=(6, 4))
@@ -174,7 +149,7 @@ def get_segment_summary(engine=None) -> pd.DataFrame:
 
 def main() -> None:
     t0 = time.time()
-    _section("Phase 6 -- Customer segmentation (RFM + K-Means)")
+    _section("Phase 6: Customer segmentation (RFM + K-Means)")
     engine = get_engine()
 
     rfm, snapshot = compute_rfm(engine)
@@ -231,7 +206,6 @@ def main() -> None:
     _section("Saving")
     save_outputs(seg, summary, engine)
 
-    # Alternative feature set for the comparison table (same k, same seed)
     alt_feats = clustering_features(rfm, not use_recency)
     alt_X = scale(alt_feats)
     alt_km = fit_kmeans(alt_X, PRODUCTION_K)
@@ -239,7 +213,7 @@ def main() -> None:
     prod_name = f"{'+'.join(feats.columns)}  (silhouette {sil:.3f})  <- production"
 
     _section("Validation against ground truth")
-    from segmentation.validate_segmentation import run_validation   # only GT reader
+    from segmentation.validate_segmentation import run_validation
     run_validation(seg, sil, alternatives={
         prod_name: seg[["customer_id", "cluster_id"]],
         alt_name: rfm[["customer_id"]].assign(cluster_id=alt_km.labels_),

@@ -1,9 +1,3 @@
-"""
-Phase 9 tests — payloads, guardrails, retry/fallback flow, isolation.
-
-Run:  cd data-pipeline && pytest tests/test_explanations.py -v
-(No API key or network needed — LLM calls use mock clients.)
-"""
 import re
 import sys
 from pathlib import Path
@@ -12,12 +6,12 @@ PIPELINE_ROOT = Path(__file__).resolve().parent.parent
 if str(PIPELINE_ROOT) not in sys.path:
     sys.path.insert(0, str(PIPELINE_ROOT))
 
-from explanations.fallback import fallback_text  # noqa: E402
-from explanations.generate_explanations import RunStats, explain_one  # noqa: E402
-from explanations.guardrails import check_output  # noqa: E402
-from explanations.llm_client import LLMClient, LLMError, MockLLMClient  # noqa: E402
-from explanations.payloads import pricing_payload, segment_payload, sensitivity_band  # noqa: E402
-from explanations.prompts import SYSTEM_PROMPT, build_prompt  # noqa: E402
+from explanations.fallback import fallback_text
+from explanations.generate_explanations import RunStats, explain_one
+from explanations.guardrails import check_output
+from explanations.llm_client import LLMClient, LLMError, MockLLMClient
+from explanations.payloads import pricing_payload, segment_payload, sensitivity_band
+from explanations.prompts import SYSTEM_PROMPT, build_prompt
 
 REC = {"product_id": "P013", "category": "Personal Care", "change_pct": -0.139,
        "revenue_change_pct": 0.0072, "binding_constraint": "MAX_CHANGE", "current_price": 15.57,
@@ -32,7 +26,6 @@ def P():
     return pricing_payload(REC, 0.15)
 
 
-# ── payloads ──────────────────────────────────────────────────────────────────
 def test_pricing_payload_is_preformatted_and_unsigned():
     p = P()
     assert p["action"] == "cut" and p["price_change"] == "13.9%"
@@ -55,7 +48,6 @@ def test_sensitivity_bands():
     assert sensitivity_band(-2.2) == "highly price-sensitive"
 
 
-# ── guardrails ────────────────────────────────────────────────────────────────
 GOOD = ("P013 is moderately price-sensitive, so cut its price by 13.9% from 15.57 to 13.40; "
         "weekly revenue should increase by 0.7%.")
 
@@ -106,7 +98,6 @@ def test_fallbacks_always_pass_guardrails():
     assert check_output(fallback_text("segment", sp), sp) == (True, None)
 
 
-# ── retry / fallback flow ─────────────────────────────────────────────────────
 class Scripted(LLMClient):
     name = "scripted"
 
@@ -153,7 +144,6 @@ def test_mock_client_output_passes_guardrails():
     assert check_output(out, P()) == (True, None)
 
 
-# ── isolation ─────────────────────────────────────────────────────────────────
 def test_explanations_never_touch_ground_truth():
     forbidden = re.compile(r"revenue_management_gt|true_elasticity|true_segment|gt_\w+")
     for f in (PIPELINE_ROOT / "explanations").glob("*.py"):

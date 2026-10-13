@@ -1,32 +1,3 @@
-"""
-Next-week feature rows — Phase 8b.
-
-Builds, for every product, the feature row the Phase 5 model needs to forecast
-demand for the week AFTER the last complete week in the data, using exactly the
-same feature definitions as Phase 4 (features/*.py):
-
-    lag_1/2/3_units       units_sold of the last 3 COMPLETE weeks
-                          (read from forecast_features, Phase 4's own output)
-    month, month_sin/cos  month of the forecast week's Monday (as in calendar_features.py)
-    seasonal_factor_mean  mean daily seasonal_factor over the 7 forecast days
-    festival_week         1 if any forecast day is a festival day
-    list_price_mean       the price being evaluated (held for the whole week)
-    price_change_pct      price / last complete week's list_price_mean − 1
-    avg_price             = price (no discount planned)
-    avg_discount, avg_discount_price, promo_days = 0  (no promotion planned —
-                          the recommendation is a regular list price)
-
-Calendar days beyond the end of the calendar table (the forecast week usually
-starts on the last Monday and runs into the next year) take the calendar row
-of the same month-day one year earlier. seasonal_factor is defined per month
-and festivals are mostly fixed dates (Christmas, New Year), so this is the
-natural "known future calendar" rule; it is stated, not hidden.
-
-Why the last COMPLETE week: the dataset ends on a Tuesday (2024-12-31), so its
-final ISO week has only 2 days. Phase 5 dropped that partial week from training
-(models/data_split.py); we never use it as a lag either.
-"""
-
 from __future__ import annotations
 
 import logging
@@ -55,7 +26,7 @@ def _calendar_for_week(cal: pd.DataFrame, week_start: pd.Timestamp) -> pd.DataFr
         if d not in cal_idx.index:
             try:
                 src = d.replace(year=d.year - 1)
-            except ValueError:                       # 29 Feb → 28 Feb
+            except ValueError:
                 src = (d - pd.Timedelta(days=1)).replace(year=d.year - 1)
         r = cal_idx.loc[src]
         rows.append({"date": d, "source_date": src, "seasonal_factor": float(r["seasonal_factor"]),
@@ -64,11 +35,6 @@ def _calendar_for_week(cal: pd.DataFrame, week_start: pd.Timestamp) -> pd.DataFr
 
 
 def build_base_rows(engine) -> tuple[pd.DataFrame, dict]:
-    """
-    One row per product with every feature EXCEPT the price-dependent ones,
-    plus prev_list_price_mean (needed for price_change_pct).
-    Returns (rows, info) where info describes the forecast week.
-    """
     with engine.connect() as conn:
         ff = pd.read_sql(text(_FEATURES_SQL), conn)
         cal = pd.read_sql(text(_CALENDAR_SQL), conn)
@@ -94,7 +60,7 @@ def build_base_rows(engine) -> tuple[pd.DataFrame, dict]:
     rows = []
     for pid, g in complete.groupby("product_id", sort=True):
         g = g.sort_values("week_start_date")
-        last3 = g.tail(3)["units_sold"].to_numpy()[::-1]          # most recent first
+        last3 = g.tail(3)["units_sold"].to_numpy()[::-1]
         if len(last3) < 3 or g["week_start_date"].iloc[-1] != last_week_start:
             raise RuntimeError(f"{pid}: fewer than 3 complete weeks ending {last_week_start.date()}")
         rows.append({"product_id": pid,
@@ -116,10 +82,6 @@ def build_base_rows(engine) -> tuple[pd.DataFrame, dict]:
 
 
 def rows_at_prices(base: pd.DataFrame, prices: pd.DataFrame) -> pd.DataFrame:
-    """
-    Expand base rows to one feature row per (product_id, price).
-    `prices` needs columns product_id, price.
-    """
     df = prices.merge(base, on="product_id", how="left")
     p = df["price"].astype(float)
     df["list_price_mean"] = p

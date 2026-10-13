@@ -1,19 +1,3 @@
-"""
-Pricing constraints — Phase 8a.
-
-One pure function per rule. Each returns (passes: bool, reason_code | None).
-Pure functions (plain numbers in, plain result out) so they are trivial to unit
-test and reuse in Phase 8b's final assertion.
-
-    MARGIN                 (price − unit_cost) / price ≥ MIN_MARGIN_PCT
-    MAX_CHANGE             |price / current − 1| ≤ MAX_PRICE_CHANGE_PCT
-    PRICE_RANGE            hist_min × (1 − tol) ≤ price ≤ hist_max × (1 + tol)
-    ELASTICITY_UNRELIABLE  if Phase 7 flagged the estimate unreliable, only the
-                           current price is allowed (no change is recommended)
-
-The STOCK rule needs predicted demand and is applied in Phase 8b (revenue.py).
-"""
-
 from __future__ import annotations
 
 import pandas as pd
@@ -22,7 +6,6 @@ from pricing.pricing_config import (ALLOW_EXTRAPOLATION, MAX_PRICE_CHANGE_PCT, M
                                     PRICE_RANGE_TOLERANCE_PCT, REASON_ELASTICITY_UNRELIABLE,
                                     REASON_MARGIN, REASON_MAX_CHANGE, REASON_PRICE_RANGE)
 
-# Floating-point slack so a value exactly on a limit (e.g. exactly 15 %) passes.
 _EPS = 1e-9
 
 
@@ -55,7 +38,6 @@ def check_elasticity_reliable(price: float, current_price: float, reliable_flag:
 
 
 def apply_constraints(candidates: pd.DataFrame, state: pd.DataFrame) -> pd.DataFrame:
-    """Add unit_cost, margin_pct, failed_reasons ('' if none) and passes_all to every candidate."""
     df = candidates.merge(
         state[["product_id", "current_price", "unit_cost", "hist_min_price",
                "hist_max_price", "reliable_flag"]], on="product_id")

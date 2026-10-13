@@ -1,24 +1,3 @@
-"""
-Guardrails — Phase 9.
-
-Every LLM output is checked before it is accepted (SRS REQ-21: the LLM must
-not alter, invent or recompute numbers). An output is REJECTED if:
-
-  NUMBER     it contains a number that is not in the payload. Numbers are
-             compared as values after stripping commas, currency symbols and
-             "%": "1,037" == "1037", "16%" == "16.0%". Any other value —
-             including a re-rounded one ("15%" when the payload says "14.9%")
-             — is rejected.
-  DIRECTION  pricing only: the wording contradicts the action (talks about
-             cutting the price when the action is raise, etc.) or never states
-             the action at all.
-  LENGTH     longer than MAX_CHARS characters.
-  JARGON     uses a banned term (BANNED_TERMS).
-  EMPTY      empty output.
-
-check_output() returns (ok, reason) where reason is None when ok.
-"""
-
 from __future__ import annotations
 
 import re
@@ -58,7 +37,7 @@ def check_numbers(text: str, payload: dict):
 
 def check_direction(text: str, payload: dict):
     action = payload.get("action")
-    if action is None:                                    # segment explanations
+    if action is None:
         return True, None
     t = text.lower()
     price_down = re.search(rf"{_DOWN}\s+(?:the\s+|its\s+|this\s+)?price|price\s+{_DOWN}|price\s+(?:cut|reduction|drop)", t)

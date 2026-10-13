@@ -1,4 +1,3 @@
-"""Shared pytest setup: make the data-pipeline packages importable."""
 import sys
 from pathlib import Path
 

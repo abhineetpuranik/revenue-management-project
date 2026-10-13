@@ -1,26 +1,3 @@
-"""
-Phase 1b orchestrator — reads Phase 1a CSVs, generates Price/Sales/Stock
-tables, writes them to data/raw/.
-
-Output files (written to data/raw/ relative to data-pipeline/):
-  price.csv   — 54 800 rows  (50 products × 1 096 dates)
-  sales.csv   — ~500 k–2 M rows  (sparse customer-product-date transactions)
-  stock.csv   — 54 800 rows  (50 products × 1 096 dates)
-
-Ground-truth reminder
----------------------
-This orchestrator reads but NEVER writes back the following columns:
-  product.csv  :: true_elasticity — used only to compute expected demand
-  customer.csv :: true_segment, purchase_rate, basket_mean, basket_std
-                  — purchase_rate is used for customer attribution weights.
-These columns must remain withheld from ML model inputs in all later phases.
-
-Run
----
-    cd data-pipeline
-    python -m data_generation.generate_transactional_tables
-"""
-
 from __future__ import annotations
 
 import hashlib
@@ -31,7 +8,6 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 
-# Allow running as a script from data-pipeline/ root
 _THIS_DIR    = Path(__file__).resolve().parent
 _PIPELINE_ROOT = _THIS_DIR.parent
 if str(_PIPELINE_ROOT) not in sys.path:
@@ -53,10 +29,6 @@ from data_generation.sales import generate_sales
 from data_generation.stock import generate_stock
 
 
-# ---------------------------------------------------------------------------
-# Helpers
-# ---------------------------------------------------------------------------
-
 def _md5(path: Path) -> str:
     h = hashlib.md5()
     h.update(path.read_bytes())
@@ -64,15 +36,8 @@ def _md5(path: Path) -> str:
 
 
 def _print_section(title: str) -> None:
-    width = 66
-    print(f"\n{'=' * width}")
-    print(f"  {title}")
-    print(f"{'=' * width}")
+    print(f"\n--- {title} ---")
 
-
-# ---------------------------------------------------------------------------
-# Verification / summary helpers
-# ---------------------------------------------------------------------------
 
 def _summarise_price(df: pd.DataFrame, df_products: pd.DataFrame) -> None:
     _print_section("PRICE TABLE -- summary stats")
@@ -80,7 +45,6 @@ def _summarise_price(df: pd.DataFrame, df_products: pd.DataFrame) -> None:
     promo_days = df["is_promo"].sum()
     print(f"  Promo product-days: {promo_days:,}  "
           f"({100 * promo_days / len(df):.1f} %)")
-    # Per-product price range — spot-check 3 products
     sample = df_products[["product_id", "base_price"]].head(3)
     print("\n  Price range sample (first 3 products):")
     for _, row in sample.iterrows():
@@ -100,15 +64,13 @@ def _summarise_sales(
     _print_section("SALES TABLE -- summary stats")
     print(f"\n  Rows: {len(df_sales):,}  |  Columns: {list(df_sales.columns)}")
     print(f"  Total units sold : {df_sales['units_sold'].sum():,}")
-    print(f"  Total revenue    : £{df_sales['revenue'].sum():,.2f}")
+    print(f"  Total revenue    : {df_sales['revenue'].sum():,.2f}")
 
-    # Per-category average units/day
     print("\n  Average daily units sold per category (elasticity check):")
     merged = df_sales.merge(
         df_products[["product_id", "category", "true_elasticity"]],
         on="product_id",
     )
-    # Number of product-days in each category
     n_dates = df_sales["date"].nunique()
     cat_products = df_products.groupby("category")["product_id"].count().rename("n_products")
     cat_stats = (
@@ -125,7 +87,6 @@ def _summarise_sales(
     cat_stats = cat_stats.join(cat_elasticity)
     print(cat_stats[["avg_daily_units_per_product", "true_elasticity"]].to_string())
 
-    # Elasticity vs price-response check
     print("\n  Elasticity vs price-response check:")
     print("  (Products with more-negative elasticity should show a stronger")
     print("   correlation between price-ratio and relative demand change.)")
@@ -133,7 +94,6 @@ def _summarise_sales(
         df_products[["product_id", "base_demand", "true_elasticity"]],
         on="product_id",
     )
-    # Correlation of price_at_sale with units_sold, per product
     corr_per_product = (
         merged2.groupby("product_id")
         .apply(lambda g: g["price_at_sale"].corr(g["units_sold"]), include_groups=False)
@@ -149,7 +109,6 @@ def _summarise_sales(
     print(cat_corr.to_string())
     print("\n  (Expect mean_corr to be negative and more negative for more-elastic categories.)")
 
-    # Segment purchase behaviour check
     print("\n  Segment purchase behaviour check:")
     seg_stats = (
         df_sales.merge(
@@ -164,7 +123,6 @@ def _summarise_sales(
         )
         .round(2)
     )
-    # Divide by number of customers per segment for per-customer metric
     seg_counts = df_customers["true_segment"].value_counts().rename("n_customers")
     seg_stats = seg_stats.join(seg_counts)
     seg_stats["transactions_per_customer"] = (
@@ -191,14 +149,10 @@ def _summarise_stock(df: pd.DataFrame) -> None:
     print(f"  Max stock level           : {df['stock_level'].max()}")
 
 
-# ---------------------------------------------------------------------------
-# Main
-# ---------------------------------------------------------------------------
-
 def main() -> None:
     t_start = time.time()
 
-    _print_section("Phase 1b -- Transactional Table Generation")
+    _print_section("Phase 1b: Transactional Table Generation")
     print(f"\n  Random seed           : {RANDOM_SEED}")
     print(f"  Price review interval : every {PRICE_CHANGE_INTERVAL_DAYS} days "
           f"(change prob {PRICE_CHANGE_PROB})")
@@ -209,9 +163,6 @@ def main() -> None:
     out_dir = _PIPELINE_ROOT / RAW_DATA_DIR
     out_dir.mkdir(parents=True, exist_ok=True)
 
-    # ------------------------------------------------------------------
-    # Load Phase 1a outputs
-    # ------------------------------------------------------------------
     print("\n  Loading Phase 1a base tables...", end=" ", flush=True)
     df_products  = pd.read_csv(out_dir / "product.csv")
     df_customers = pd.read_csv(out_dir / "customer.csv")
@@ -222,22 +173,13 @@ def main() -> None:
     print(f"    customer.csv : {len(df_customers):,} rows")
     print(f"    calendar.csv : {len(df_calendar):,} rows")
 
-    # ------------------------------------------------------------------
-    # Single shared RNG — same seed as Phase 1a for end-to-end reproducibility
-    # ------------------------------------------------------------------
     rng = np.random.default_rng(RANDOM_SEED)
 
-    # ------------------------------------------------------------------
-    # Generate: Price
-    # ------------------------------------------------------------------
     print("\n  Generating Price table...", end=" ", flush=True)
     t0 = time.time()
     df_price = generate_prices(df_products, df_calendar, rng)
     print(f"done ({time.time() - t0:.1f}s)  {len(df_price):,} rows")
 
-    # ------------------------------------------------------------------
-    # Generate: Sales
-    # ------------------------------------------------------------------
     print("  Generating Sales table (this is the slow step)...",
           end=" ", flush=True)
     t0 = time.time()
@@ -246,17 +188,11 @@ def main() -> None:
     )
     print(f"done ({time.time() - t0:.1f}s)  {len(df_sales):,} rows")
 
-    # ------------------------------------------------------------------
-    # Generate: Stock
-    # ------------------------------------------------------------------
     print("  Generating Stock table...", end=" ", flush=True)
     t0 = time.time()
     df_stock = generate_stock(df_products, df_calendar, df_daily_units)
     print(f"done ({time.time() - t0:.1f}s)  {len(df_stock):,} rows")
 
-    # ------------------------------------------------------------------
-    # Write CSVs
-    # ------------------------------------------------------------------
     price_path = out_dir / "price.csv"
     sales_path = out_dir / "sales.csv"
     stock_path = out_dir / "stock.csv"
@@ -273,9 +209,6 @@ def main() -> None:
     for path in (price_path, sales_path, stock_path):
         print(f"    {path.name:<15} {_md5(path)}")
 
-    # ------------------------------------------------------------------
-    # Summary / verification output
-    # ------------------------------------------------------------------
     _summarise_price(df_price, df_products)
     _summarise_sales(df_sales, df_products, df_customers)
     _summarise_stock(df_stock)

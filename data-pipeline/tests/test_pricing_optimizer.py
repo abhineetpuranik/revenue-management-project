@@ -1,8 +1,3 @@
-"""
-Phase 8b tests — demand scaling, stock cap, revenue, best-price selection.
-
-Run:  cd data-pipeline && pytest tests/test_pricing_optimizer.py -v
-"""
 import re
 import sys
 from pathlib import Path
@@ -14,15 +9,14 @@ PIPELINE_ROOT = Path(__file__).resolve().parent.parent
 if str(PIPELINE_ROOT) not in sys.path:
     sys.path.insert(0, str(PIPELINE_ROOT))
 
-from pricing.demand_response import elasticity_scaled_demand  # noqa: E402
-from pricing.next_week_features import _calendar_for_week, rows_at_prices  # noqa: E402
-from pricing.optimizer import binding_constraint, select_best  # noqa: E402
-from pricing.revenue import available_stock, score_candidates  # noqa: E402
+from pricing.demand_response import elasticity_scaled_demand
+from pricing.next_week_features import _calendar_for_week, rows_at_prices
+from pricing.optimizer import binding_constraint, select_best
+from pricing.revenue import available_stock, score_candidates
 
 
 def test_elasticity_scaling_returns_baseline_at_current_price():
     assert elasticity_scaled_demand(120.0, 10.0, 10.0, -1.7) == 120.0
-    # 10 % price rise with β = −2  →  demand × 1.1^−2
     assert np.isclose(elasticity_scaled_demand(100.0, 11.0, 10.0, -2.0), 100.0 / 1.21)
 
 
@@ -77,7 +71,6 @@ def test_rejected_neighbour_is_the_binding_constraint():
 
 
 def test_stock_cap_creates_interior_optimum():
-    # elastic product, but stock only covers ~105 units → cutting past ~-2.4 % adds no units
     g = _grid(-2.0, stock=105.0)
     best = select_best(g)
     assert -5 <= best["step"] <= -1
@@ -85,10 +78,10 @@ def test_stock_cap_creates_interior_optimum():
 
 
 def test_tie_break_prefers_smallest_move():
-    g = _grid(-1.0)                       # revenue identical at every price (β = −1)
+    g = _grid(-1.0)
     best = select_best(g)
     assert best["step"] == 0
-    g2 = _grid(-1.02)                     # tiny gain from cutting: within tolerance near 0
+    g2 = _grid(-1.02)
     assert abs(select_best(g2)["step"]) < 15
     assert binding_constraint(g2, select_best(g2)) in {"TIE_TOLERANCE", "MAX_CHANGE"}
 
@@ -116,7 +109,6 @@ def test_rows_at_prices_sets_price_features():
 
 
 def test_pricing_ground_truth_isolation():
-    """Only the validate_*.py files in pricing/ may reference ground truth."""
     forbidden = re.compile(r"revenue_management_gt|true_elasticity|gt_product_elasticity")
     for f in (PIPELINE_ROOT / "pricing").glob("*.py"):
         if f.name.startswith("validate_"):

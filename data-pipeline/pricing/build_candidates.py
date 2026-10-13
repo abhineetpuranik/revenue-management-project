@@ -1,26 +1,3 @@
-"""
-Phase 8a orchestrator — candidate prices + constraint filtering.
-
-Steps
------
-1. Load each product's current state (current_state.load_current_state)
-2. Generate the candidate grid (candidates.generate_candidates)
-3. Apply MARGIN, MAX_CHANGE, PRICE_RANGE, ELASTICITY_UNRELIABLE (constraints.py)
-4. Save ALL candidates, rejected ones included, to MySQL pricing_candidates
-   (delete-and-reload, one transaction) and data/pricing/pricing_candidates.csv.
-   Rejected rows are kept on purpose: the dashboard / viva can show WHY a
-   price was ruled out.
-5. Report pass/fail counts, rejections per reason, and products with no
-   feasible price change.
-
-The STOCK rule is not applied here — it needs predicted demand (Phase 8b).
-
-Run
----
-    cd data-pipeline
-    python -m pricing.build_candidates
-"""
-
 from __future__ import annotations
 
 import logging
@@ -51,7 +28,6 @@ TABLE_NAME = "pricing_candidates"
 OUTPUT_DIR = _PIPELINE_ROOT / "data" / "pricing"
 CSV_PATH = OUTPUT_DIR / "pricing_candidates.csv"
 
-# Kept identical to database/schema.sql (section 4b).
 CREATE_TABLE_SQL = """
 CREATE TABLE IF NOT EXISTS pricing_candidates (
     product_id       VARCHAR(10)    NOT NULL,
@@ -70,7 +46,7 @@ CREATE TABLE IF NOT EXISTS pricing_candidates (
 
 
 def _section(title: str) -> None:
-    print(f"\n{'=' * 66}\n  {title}\n{'=' * 66}")
+    print(f"\n--- {title} ---")
 
 
 def save_candidates(cands: pd.DataFrame, engine) -> None:
@@ -98,7 +74,6 @@ def load_candidates(engine=None, passing_only: bool = False) -> pd.DataFrame:
 
 
 def assert_passing_rows_valid(cands: pd.DataFrame, state: pd.DataFrame) -> None:
-    """Independent re-check: no passing candidate may violate any rule."""
     df = cands[cands["passes_all"] == 1].merge(state, on="product_id", suffixes=("", "_s"))
     for r in df.itertuples(index=False):
         assert check_margin(r.candidate_price, r.unit_cost)[0], r
@@ -109,12 +84,12 @@ def assert_passing_rows_valid(cands: pd.DataFrame, state: pd.DataFrame) -> None:
 
 def main() -> None:
     t0 = time.time()
-    _section("Phase 8a -- Candidate prices + constraints")
+    _section("Phase 8a: Candidate prices + constraints")
     print(f"  MIN_MARGIN_PCT       = {cfg.MIN_MARGIN_PCT:.0%}")
-    print(f"  MAX_PRICE_CHANGE_PCT = ±{cfg.MAX_PRICE_CHANGE_PCT:.0%}")
+    print(f"  MAX_PRICE_CHANGE_PCT = +/-{cfg.MAX_PRICE_CHANGE_PCT:.0%}")
     print(f"  PRICE_STEP_PCT       = {cfg.PRICE_STEP_PCT:.0%}")
     print(f"  ALLOW_EXTRAPOLATION  = {cfg.ALLOW_EXTRAPOLATION}")
-    print("  ASSUMPTION: no cost data exists; unit_cost = base_price × COST_RATIO[category]")
+    print("  ASSUMPTION: no cost data exists; unit_cost = base_price x COST_RATIO[category]")
     for cat, r in cfg.COST_RATIO.items():
         print(f"      {cat:<14} {r:.2f}")
 

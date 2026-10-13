@@ -1,17 +1,3 @@
-"""
-Payloads — Phase 9.
-
-Builds the EXACT JSON object the LLM sees for each explanation. Rules:
-  * only the fields the sentence needs — no raw tables, no customer-level data,
-    no ground truth;
-  * every number is pre-rounded and pre-formatted as a string ("14.9%", "3.77"),
-    so the LLM never has to calculate or round anything;
-  * signs are removed from percentages and carried by words instead
-    (action = "raise"/"cut"/"hold", revenue_direction = "increase"/...), which
-    avoids the LLM mangling "-6%" vs "6%";
-  * the price-sensitivity band is computed here from the elasticity.
-"""
-
 from __future__ import annotations
 
 import pandas as pd
@@ -66,7 +52,6 @@ def _revenue_direction(change: float) -> str:
 
 
 def pricing_payload(rec: dict, max_change_pct: float) -> dict:
-    """One pricing recommendation (a row of pricing_recommendation) → LLM payload."""
     change = float(rec["change_pct"])
     rev_change = float(rec["revenue_change_pct"])
     binding = str(rec["binding_constraint"])
@@ -93,7 +78,6 @@ def pricing_payload(rec: dict, max_change_pct: float) -> dict:
 
 
 def segment_payload(row: dict) -> dict:
-    """One row of segment_summary → LLM payload."""
     return {
         "segment": SEGMENT_NAMES.get(str(row["segment_label"]), str(row["segment_label"])),
         "customers": f"{int(row['customer_count']):,}",
@@ -106,7 +90,6 @@ def segment_payload(row: dict) -> dict:
 
 
 def build_all_payloads(recs: pd.DataFrame, segments: pd.DataFrame, max_change_pct: float):
-    """[(entity_type, entity_id, payload), ...] in a stable order."""
     out = []
     for rec in recs.sort_values("product_id").to_dict(orient="records"):
         out.append(("pricing", rec["product_id"], pricing_payload(rec, max_change_pct)))

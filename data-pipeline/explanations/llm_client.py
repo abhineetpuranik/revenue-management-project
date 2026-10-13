@@ -1,17 +1,3 @@
-"""
-LLM clients — Phase 9.
-
-A deliberately tiny interface:  client.generate(system_prompt, user_prompt) -> str
-
-    GeminiClient    Google Gemini via the official google-genai SDK
-    MockLLMClient   deterministic, offline — renders the template fallback from
-                    the JSON in the prompt. Used for tests, demos and for
-                    teammates without an API key.
-
-get_client() picks one from LLM_PROVIDER (gemini | mock).
-No LangChain, no agents, no retrieval — one prompt in, one text out.
-"""
-
 from __future__ import annotations
 
 import json
@@ -24,18 +10,17 @@ from explanations.fallback import fallback_text
 
 
 class LLMError(RuntimeError):
-    """Any failure talking to the LLM (network, auth, quota, timeout, empty reply)."""
+    pass
 
 
 class LLMClient:
     name: str = "base"
 
-    def generate(self, system_prompt: str, user_prompt: str) -> str:  # pragma: no cover
+    def generate(self, system_prompt: str, user_prompt: str) -> str:
         raise NotImplementedError
 
 
 class MockLLMClient(LLMClient):
-    """Deterministic stand-in: returns the template sentence for the payload in the prompt."""
     name = "mock"
 
     def generate(self, system_prompt: str, user_prompt: str) -> str:
@@ -56,15 +41,15 @@ class GeminiClient(LLMClient):
         try:
             from google import genai
             from google.genai import types
-        except ImportError as exc:                       # pragma: no cover
+        except ImportError as exc:
             raise LLMError("google-genai is not installed: pip install -r requirements.txt") from exc
         self._types = types
         self.model = model or model_name()
         self.name = self.model
         try:
-            http = types.HttpOptions(timeout=REQUEST_TIMEOUT_S * 1000)   # milliseconds
+            http = types.HttpOptions(timeout=REQUEST_TIMEOUT_S * 1000)
             self._client = genai.Client(api_key=api_key, http_options=http)
-        except TypeError:                                 # older SDKs without timeout option
+        except TypeError:
             self._client = genai.Client(api_key=api_key)
 
     def generate(self, system_prompt: str, user_prompt: str) -> str:
@@ -78,7 +63,7 @@ class GeminiClient(LLMClient):
                     max_output_tokens=MAX_OUTPUT_TOKENS,
                 ),
             )
-        except Exception as exc:                          # network, quota, auth, timeout ...
+        except Exception as exc:
             raise LLMError(f"{type(exc).__name__}: {exc}") from exc
         text = getattr(resp, "text", None)
         if not text:

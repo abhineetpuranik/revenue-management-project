@@ -1,11 +1,3 @@
-"""
-Template fallback — Phase 9.
-
-Used when the LLM errors, times out, or its output fails the guardrails twice,
-so every product and segment ALWAYS has an explanation (SRS REQ-22). The text
-is built only from the payload, so it passes the same guardrails by construction.
-"""
-
 from __future__ import annotations
 
 

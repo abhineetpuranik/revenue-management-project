@@ -1,8 +1,3 @@
-"""
-Phase 7 tests — elasticity model and ground-truth isolation.
-
-Run:  cd data-pipeline && pytest tests/test_elasticity.py -v
-"""
 import re
 import sys
 from pathlib import Path
@@ -14,12 +9,11 @@ PIPELINE_ROOT = Path(__file__).resolve().parent.parent
 if str(PIPELINE_ROOT) not in sys.path:
     sys.path.insert(0, str(PIPELINE_ROOT))
 
-from pricing.elasticity_model import fit_all, fit_product  # noqa: E402
+from pricing.elasticity_model import fit_all, fit_product
 
 
 def _synthetic_weeks(beta: float, n: int = 156, seed: int = 0, price_std: float = 0.1,
                      noise: float = 0.05) -> pd.DataFrame:
-    """Weekly rows generated from a known log-log demand curve."""
     rng = np.random.default_rng(seed)
     lpr = rng.normal(0, price_std, n)
     promo = rng.integers(0, 3, n)
@@ -58,8 +52,8 @@ def test_too_few_observations():
 
 def test_constant_control_is_dropped_not_singular():
     df = _synthetic_weeks(-1.2)
-    df["units_sold"] /= np.exp(0.2 * df["festival_days"])   # remove the festival effect...
-    df["festival_days"] = 0                                  # ...so the product has no festival weeks
+    df["units_sold"] /= np.exp(0.2 * df["festival_days"])
+    df["festival_days"] = 0
     res = fit_product(df)
     assert abs(res["elasticity"] + 1.2) < 0.05
 
@@ -73,7 +67,6 @@ def test_fit_all_is_deterministic():
 
 
 def test_ground_truth_isolation():
-    """Only validate_elasticity.py may reference the ground-truth schema/columns."""
     forbidden = re.compile(r"revenue_management_gt|true_elasticity|gt_product_elasticity")
     for name in ["elasticity_data.py", "elasticity_model.py", "estimate_elasticity.py"]:
         src = (PIPELINE_ROOT / "pricing" / name).read_text(encoding="utf-8")
