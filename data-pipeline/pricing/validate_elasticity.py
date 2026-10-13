@@ -1,21 +1,3 @@
-"""
-Elasticity validation — Phase 7 (Module 4a).
-
-THE ONLY Phase 7 FILE ALLOWED TO READ GROUND TRUTH.
-It compares the estimated elasticities with revenue_management_gt.gt_product_elasticity
-and reports:
-
-    * MAE, RMSE, Pearson correlation
-    * % of products within ±0.2 of the true value
-    * % with the correct (negative) sign
-    * 95 % CI coverage (share of products whose CI contains the true value)
-    * per-category table: mean estimate vs. mean true value vs. design anchor
-    * a design comparison of alternative specifications (for the viva):
-        - PRODUCTION : weekly, list price, promo control
-        - DAILY      : daily, list price, promo + weekday controls, zero days dropped
-        - SALE_PRICE : weekly, price_at_sale, NO promo control
-"""
-
 from __future__ import annotations
 
 import logging
@@ -30,7 +12,7 @@ _PIPELINE_ROOT = Path(__file__).resolve().parent.parent
 if str(_PIPELINE_ROOT) not in sys.path:
     sys.path.insert(0, str(_PIPELINE_ROOT))
 
-from data_generation.config import CATEGORIES  # design anchors (generator config)
+from data_generation.config import CATEGORIES
 from etl.db_connection import get_gt_engine
 from pricing.elasticity_model import fit_all, fit_product
 
@@ -42,7 +24,6 @@ _GT_SQL = "SELECT product_id, true_elasticity FROM gt_product_elasticity"
 
 
 def load_ground_truth(gt_engine=None) -> pd.DataFrame:
-    """Read true elasticity per product from the ground-truth schema."""
     gt_engine = gt_engine or get_gt_engine()
     with gt_engine.connect() as conn:
         gt = pd.read_sql(text(_GT_SQL), conn)
@@ -51,7 +32,6 @@ def load_ground_truth(gt_engine=None) -> pd.DataFrame:
 
 
 def compute_metrics(est: pd.DataFrame, gt: pd.DataFrame, col: str = "elasticity") -> dict:
-    """Accuracy metrics of estimates in `col` against true_elasticity."""
     m = est.merge(gt, on="product_id", how="inner").dropna(subset=[col])
     err = m[col] - m["true_elasticity"]
     out = {
@@ -85,7 +65,6 @@ def per_category_table(est: pd.DataFrame, gt: pd.DataFrame) -> pd.DataFrame:
 
 
 def _daily_variant(daily: pd.DataFrame) -> pd.DataFrame:
-    """DAILY spec: one row per product-day, zero days dropped inside fit_product."""
     d = daily.copy()
     d["log_price_ratio"] = np.log(d["list_price"] / d["base_price"])
     d["log_seasonal"] = np.log(d["seasonal_factor"])
@@ -95,7 +74,6 @@ def _daily_variant(daily: pd.DataFrame) -> pd.DataFrame:
 
 def design_comparison(daily: pd.DataFrame, weekly: pd.DataFrame,
                       production: pd.DataFrame, gt: pd.DataFrame) -> pd.DataFrame:
-    """MAE etc. of the production spec vs. two rejected alternatives."""
     variants = {
         "PRODUCTION (weekly, list price, promo control)": production,
         "DAILY (zero days dropped)": _daily_variant(daily),
@@ -113,7 +91,6 @@ def design_comparison(daily: pd.DataFrame, weekly: pd.DataFrame,
 
 def run_validation(est: pd.DataFrame, daily: pd.DataFrame | None = None,
                    weekly: pd.DataFrame | None = None) -> dict:
-    """Print the full validation report; returns the headline metrics."""
     gt = load_ground_truth()
     metrics = compute_metrics(est, gt)
 
@@ -122,7 +99,7 @@ def run_validation(est: pd.DataFrame, daily: pd.DataFrame | None = None,
     print(f"    MAE                  : {metrics['mae']:.4f}")
     print(f"    RMSE                 : {metrics['rmse']:.4f}")
     print(f"    correlation          : {metrics['correlation']:.4f}")
-    print(f"    within ±{WITHIN_TOLERANCE}          : {metrics['within_0_2_pct']:.1f} %")
+    print(f"    within +/-{WITHIN_TOLERANCE}          : {metrics['within_0_2_pct']:.1f} %")
     print(f"    correct sign         : {metrics['correct_sign_pct']:.1f} %")
     print(f"    95% CI coverage      : {metrics['ci_coverage_pct']:.1f} %")
 

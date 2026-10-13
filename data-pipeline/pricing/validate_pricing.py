@@ -1,19 +1,3 @@
-"""
-Pricing ground-truth sanity check — Phase 8b.
-
-THE ONLY PRICING FILE (besides validate_elasticity.py) ALLOWED TO READ GROUND TRUTH.
-
-Question answered: does the elasticity ESTIMATION error change the pricing
-DECISION? We re-run the same selection with true_elasticity in place of the
-Phase 7 estimate (same baseline demand, same candidates, same rules) and report:
-
-    * how many products get the same direction (raise / cut / hold)
-    * mean absolute difference in recommended price (%)
-    * revenue lost by deciding with the estimate: both decisions are evaluated
-      under the TRUE demand curve, and the loss is
-          1 − revenue_true(p_estimated) / revenue_true(p_true_optimal)
-"""
-
 from __future__ import annotations
 
 import sys
@@ -38,11 +22,6 @@ def _direction(change: float) -> str:
 
 
 def run_validation(scored: pd.DataFrame, recs: pd.DataFrame) -> dict:
-    """
-    scored : every candidate with candidate_price, current_price, baseline_demand,
-             available_stock, unit_cost, passes_all, step (as built by run_pricing)
-    recs   : the production recommendations (product_id, recommended_price, change_pct)
-    """
     with get_gt_engine().connect() as conn:
         gt = pd.read_sql(text("SELECT product_id, true_elasticity FROM gt_product_elasticity"), conn)
     gt["true_elasticity"] = gt["true_elasticity"].astype(float)
@@ -50,7 +29,7 @@ def run_validation(scored: pd.DataFrame, recs: pd.DataFrame) -> dict:
     s = scored.merge(gt, on="product_id")
     s["expected_demand"] = elasticity_scaled_demand(s["baseline_demand"], s["candidate_price"],
                                                     s["current_price"], s["true_elasticity"])
-    s = score_candidates(s)                        # revenue under the TRUE demand curve
+    s = score_candidates(s)
 
     rows = []
     for pid, g in s.groupby("product_id"):

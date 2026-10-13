@@ -1,17 +1,3 @@
-"""
-Current product state — Phase 8a.
-
-One row per product with everything the pricing rules need:
-
-    product_id, category, base_price, unit_cost,
-    current_price      — list price on the latest date in the price table
-    price_date         — that date
-    hist_min_price, hist_max_price — observed list-price range
-    stock_level        — stock on the latest date in the stock table
-    weekly_restock     — size of the most recent restock (restocks are weekly)
-    elasticity, reliable_flag — from Phase 7 (product_elasticity)
-"""
-
 from __future__ import annotations
 
 import logging
@@ -76,7 +62,7 @@ def load_current_state(engine) -> pd.DataFrame:
 
     missing_cost = sorted(set(state["category"]) - set(COST_RATIO))
     if missing_cost:
-        raise KeyError(f"COST_RATIO has no entry for categories {missing_cost} — "
+        raise KeyError(f"COST_RATIO has no entry for categories {missing_cost} - "
                        "add them to pricing/pricing_config.py")
     state["unit_cost"] = (state["base_price"] * state["category"].map(COST_RATIO)).round(4)
 

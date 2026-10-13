@@ -1,11 +1,3 @@
-"""
-Prompts — Phase 9.
-
-The system prompt carries the hard rules; each user prompt carries one JSON
-payload (payloads.py). The guardrails (guardrails.py) then CHECK that the rules
-were followed — the prompt asks, the guardrails enforce.
-"""
-
 from __future__ import annotations
 
 import json
@@ -33,7 +25,6 @@ JSON:
 
 
 def payload_json(payload: dict) -> str:
-    """Canonical JSON (sorted keys) — also what the cache hash is computed on."""
     return json.dumps(payload, sort_keys=True, ensure_ascii=False)
 
 

@@ -1,30 +1,3 @@
-"""
-Phase 7 orchestrator — price elasticity estimation (Module 4a).
-
-Steps
------
-1. Build the daily product panel from MySQL (elasticity_data.load_daily_panel)
-2. Report zero-sales days per product
-3. Aggregate to complete ISO weeks (elasticity_data.build_weekly_panel)
-4. Fit one log-log OLS per product (elasticity_model.fit_all)
-5. Save to MySQL revenue_management.product_elasticity (delete-and-reload,
-   one transaction) and data/elasticity/product_elasticity.csv
-6. Validate against ground truth (validate_elasticity — the only Phase 7
-   module that reads the ground-truth schema)
-
-Run
----
-    cd data-pipeline
-    python -m pricing.estimate_elasticity
-
-Public interface (Phase 8 / Phase 9 / Phase 10)
------------------------------------------------
-    from pricing.estimate_elasticity import get_elasticity, load_elasticities
-    get_elasticity("P001")
-    # {'product_id': 'P001', 'elasticity': -0.52, 'std_error': ..., 'ci_low': ...,
-    #  'ci_high': ..., 'r_squared': ..., 'n_obs': ..., 'reliable_flag': 1, ...}
-"""
-
 from __future__ import annotations
 
 import logging
@@ -56,7 +29,6 @@ CSV_PATH = OUTPUT_DIR / "product_elasticity.csv"
 OUTPUT_COLUMNS = ["product_id", "category", "elasticity", "std_error", "ci_low", "ci_high",
                   "r_squared", "n_obs", "reliable_flag", "unreliable_reasons", "estimated_at"]
 
-# Kept identical to the DDL in database/schema.sql (section 4a).
 CREATE_TABLE_SQL = """
 CREATE TABLE IF NOT EXISTS product_elasticity (
     product_id          VARCHAR(10)   NOT NULL,
@@ -77,11 +49,10 @@ CREATE TABLE IF NOT EXISTS product_elasticity (
 
 
 def _section(title: str) -> None:
-    print(f"\n{'=' * 66}\n  {title}\n{'=' * 66}")
+    print(f"\n--- {title} ---")
 
 
 def save_estimates(est: pd.DataFrame, engine) -> None:
-    """Delete-and-reload product_elasticity in ONE transaction, then write the CSV."""
     out = est[OUTPUT_COLUMNS].copy()
     out[["elasticity", "std_error", "ci_low", "ci_high", "r_squared"]] = (
         out[["elasticity", "std_error", "ci_low", "ci_high", "r_squared"]].round(4))
@@ -97,7 +68,6 @@ def save_estimates(est: pd.DataFrame, engine) -> None:
 
 
 def load_elasticities(source: str = "db", engine=None) -> pd.DataFrame:
-    """All saved estimates. source='db' (MySQL table) or 'csv'."""
     if source == "csv":
         return pd.read_csv(CSV_PATH)
     engine = engine or get_engine()
@@ -106,7 +76,6 @@ def load_elasticities(source: str = "db", engine=None) -> pd.DataFrame:
 
 
 def get_elasticity(product_id: str, source: str = "db", engine=None) -> dict:
-    """Saved elasticity estimate for one product. Raises KeyError if unknown."""
     df = load_elasticities(source=source, engine=engine)
     row = df[df["product_id"] == product_id]
     if row.empty:
@@ -117,7 +86,7 @@ def get_elasticity(product_id: str, source: str = "db", engine=None) -> dict:
 
 def main() -> None:
     t0 = time.time()
-    _section("Phase 7 -- Price elasticity estimation")
+    _section("Phase 7: Price elasticity estimation")
     engine = get_engine()
 
     daily = load_daily_panel(engine)
@@ -126,7 +95,7 @@ def main() -> None:
     zs = zero_sales_summary(daily)
     print(zs.head(10).to_string(index=False, float_format=lambda v: f"{v:.4f}"))
     print(f"\n  Products with any zero-sales day: {(zs['zero_days'] > 0).sum()} / {len(zs)}")
-    print("  -> Weekly grain used for every product (see elasticity_data.py docstring).")
+    print("  Using weekly totals for every product.")
 
     weekly = build_weekly_panel(daily)
     zero_weeks = int((weekly["units_sold"] == 0).sum())
@@ -149,7 +118,7 @@ def main() -> None:
     save_estimates(est, engine)
 
     _section("Validation against ground truth")
-    from pricing.validate_elasticity import run_validation   # only this module reads GT
+    from pricing.validate_elasticity import run_validation
     run_validation(est, daily=daily, weekly=weekly)
 
     _section(f"Phase 7 complete ({time.time() - t0:.1f}s)")

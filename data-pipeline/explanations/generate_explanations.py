@@ -1,31 +1,3 @@
-"""
-Phase 9 orchestrator — LLM explanation layer (batch).
-
-Steps
------
-1. Read validated outputs: pricing_recommendation (Phase 8b) and
-   segment_summary (Phase 6) — application schema only, never ground truth.
-2. Build one payload per product and per segment (payloads.py).
-3. Cache: if an entity's payload hash and model are unchanged since the last
-   run and its stored text came from the LLM, reuse it (no API call).
-4. Otherwise call the LLM → guardrails → on rejection or API error retry once
-   → if still failing, use the template fallback. Every entity always ends up
-   with an explanation; nothing crashes the batch.
-5. Save to llm_explanation (MySQL, delete-and-reload in one transaction) and
-   data/explanations/llm_explanations.csv.
-
-Run
----
-    cd data-pipeline
-    LLM_PROVIDER=mock   python -m explanations.generate_explanations   # offline
-    LLM_PROVIDER=gemini python -m explanations.generate_explanations   # needs LLM_API_KEY
-
-Public interface (Phase 10b)
-----------------------------
-    from explanations.generate_explanations import get_explanation
-    get_explanation("pricing", "P001")   /   get_explanation("segment", "high_value")
-"""
-
 from __future__ import annotations
 
 import hashlib
@@ -64,7 +36,6 @@ OUTPUT_COLUMNS = ["explanation_id", "entity_type", "entity_id", "explanation_tex
                   "payload_json", "payload_hash", "model_name", "guardrail_status",
                   "rejection_reason", "attempts", "generated_at"]
 
-# Kept identical to database/schema.sql (section 4d).
 CREATE_TABLE_SQL = """
 CREATE TABLE IF NOT EXISTS llm_explanation (
     explanation_id    INT            NOT NULL,
@@ -101,7 +72,6 @@ def _hash(pj: str) -> str:
 
 def explain_one(client: LLMClient, entity_type: str, payload: dict, stats: RunStats,
                 sleep=time.sleep) -> dict:
-    """LLM → guardrails → retry once → fallback. Returns text, source, status, reason, attempts."""
     prompt = build_prompt(entity_type, payload)
     reasons = []
     for attempt in range(1, MAX_RETRIES + 2):
@@ -134,17 +104,16 @@ def _load_inputs(engine) -> tuple[pd.DataFrame, pd.DataFrame]:
         recs = pd.read_sql(text("SELECT * FROM pricing_recommendation ORDER BY product_id"), conn)
         segs = pd.read_sql(text("SELECT * FROM segment_summary"), conn)
     if recs.empty or segs.empty:
-        raise RuntimeError("pricing_recommendation or segment_summary is empty — run Phase 8b "
+        raise RuntimeError("pricing_recommendation or segment_summary is empty - run Phase 8b "
                            "(pricing.run_pricing) and Phase 6 (segmentation.run_segmentation) first.")
     return recs, segs
 
 
 def _load_cache(engine) -> dict:
-    """{(entity_type, entity_id): row} from the previous run, or {} if none."""
     try:
         with engine.connect() as conn:
             prev = pd.read_sql(text(f"SELECT * FROM {TABLE_NAME}"), conn)
-    except Exception:            # table does not exist yet
+    except Exception:
         return {}
     return {(r["entity_type"], r["entity_id"]): r for r in prev.to_dict(orient="records")}
 
@@ -198,12 +167,12 @@ def get_explanation(entity_type: str, entity_id: str, engine=None) -> dict:
 
 
 def _section(title: str) -> None:
-    print(f"\n{'=' * 66}\n  {title}\n{'=' * 66}")
+    print(f"\n--- {title} ---")
 
 
 def main() -> None:
     t0 = time.time()
-    _section("Phase 9 -- LLM explanation layer")
+    _section("Phase 9: LLM explanation layer")
     engine = get_engine()
     client = get_client()
     print(f"  Provider / model : {client.name}")

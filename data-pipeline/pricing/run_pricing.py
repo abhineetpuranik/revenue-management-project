@@ -1,29 +1,3 @@
-"""
-Phase 8b orchestrator — expected revenue + best-price selection.
-
-Steps
------
-1. Current state (8a) and ALL candidates from pricing_candidates (8a)
-2. Next-week feature rows (next_week_features) and the Phase 5 model
-3. Baseline D0 at the current price; expected demand at every candidate via
-   D0 × (p / p_current) ^ β (Phase 7 elasticity)
-4. Stock cap, revenue, profit (revenue.score_candidates)
-5. Best feasible price per product (optimizer.select_best) + binding constraint
-6. Save pricing_recommendation (MySQL, delete-and-reload, one transaction) + CSV
-7. Reports: distribution, corner-solution check, XGBoost-direct diagnostic,
-   ground-truth sanity check (validate_pricing — the only GT reader here)
-
-Run
----
-    cd data-pipeline
-    python -m pricing.build_candidates      # Phase 8a first
-    python -m pricing.run_pricing
-
-Public interface (Phase 9 / Phase 10)
--------------------------------------
-    from pricing.run_pricing import get_recommendation, get_all_recommendations
-"""
-
 from __future__ import annotations
 
 import logging
@@ -67,7 +41,6 @@ OUTPUT_COLUMNS = [
     "binding_constraint", "reason_codes", "model_type", "forecast_week", "generated_at",
 ]
 
-# Kept identical to database/schema.sql (section 4c).
 CREATE_TABLE_SQL = """
 CREATE TABLE IF NOT EXISTS pricing_recommendation (
     product_id          VARCHAR(10)    NOT NULL,
@@ -98,11 +71,10 @@ CREATE TABLE IF NOT EXISTS pricing_recommendation (
 
 
 def _section(title: str) -> None:
-    print(f"\n{'=' * 66}\n  {title}\n{'=' * 66}")
+    print(f"\n--- {title} ---")
 
 
 def build_scored_candidates(state, cands, base_rows, model, metadata):
-    """All candidates (passing and rejected) with demand, revenue and the diagnostic."""
     cur_rows = rows_at_prices(base_rows, state[["product_id"]].assign(price=state["current_price"]))
     d0 = baseline_forecast(model, metadata, cur_rows)
 
@@ -160,7 +132,6 @@ def recommend(scored: pd.DataFrame, state: pd.DataFrame, model_type: str, foreca
 
 
 def assert_recommendations_valid(recs: pd.DataFrame, state: pd.DataFrame) -> None:
-    """No recommendation may break an 8a rule (unless explicitly flagged NO_FEASIBLE_PRICE)."""
     m = recs.merge(state, on="product_id", suffixes=("", "_s"))
     for r in m.itertuples(index=False):
         if r.binding_constraint == "NO_FEASIBLE_PRICE":
@@ -203,7 +174,6 @@ def get_recommendation(product_id: str, engine=None) -> dict:
 
 
 def _corner_check(recs: pd.DataFrame) -> pd.DataFrame:
-    """Revenue ∝ p^(1+β): inelastic (β > −1) should go UP, elastic (β < −1) DOWN."""
     r = recs.copy()
     r["expected_direction"] = np.where(r["elasticity"] > -1, "raise", "cut")
     r["direction"] = np.where(r["change_pct"] > 1e-9, "raise",
@@ -214,7 +184,7 @@ def _corner_check(recs: pd.DataFrame) -> pd.DataFrame:
 
 def main() -> None:
     t0 = time.time()
-    _section("Phase 8b -- Expected revenue + best-price selection")
+    _section("Phase 8b: Expected revenue + best-price selection")
     engine = get_engine()
 
     state = load_current_state(engine)
@@ -254,7 +224,7 @@ def main() -> None:
     print("\n  Binding constraint counts")
     print(recs["binding_constraint"].value_counts().to_string())
 
-    _section("Corner-solution check (revenue ∝ p^(1+β))")
+    _section("Corner-solution check (revenue ~ p^(1+beta))")
     cc = _corner_check(recs)
     print(f"  Follow the expected direction: {int(cc['follows_pattern'].sum())} / {len(cc)}")
     off = cc[~cc["follows_pattern"]]
@@ -280,7 +250,7 @@ def main() -> None:
     save_recommendations(recs, engine)
 
     _section("Ground-truth sanity check (decisions with estimated vs. true elasticity)")
-    from pricing.validate_pricing import run_validation      # only GT reader in Phase 8
+    from pricing.validate_pricing import run_validation
     run_validation(scored, recs)
 
     _section(f"Phase 8b complete ({time.time() - t0:.1f}s)")

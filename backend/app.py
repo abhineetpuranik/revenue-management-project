@@ -1,5 +1,3 @@
-"""Flask application entry point."""
-
 from flask import Flask, jsonify
 from flask_cors import CORS
 from dotenv import load_dotenv
@@ -13,7 +11,6 @@ CORS(app)
 
 @app.route("/api/health", methods=["GET"])
 def health_check():
-    """Health-check endpoint — confirms the API is reachable."""
     return jsonify({"status": "ok"}), 200
 
 

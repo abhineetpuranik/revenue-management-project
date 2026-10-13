@@ -1,25 +1,3 @@
-"""
-Labeling — Phase 6 (Module 3).
-
-Maps K-Means cluster IDs to business labels using ONLY the cluster centroids
-in original RFM units (never the ground truth).
-
-Rule
-----
-For each cluster compute the mean recency_days, frequency and monetary.
-Standardise those centroid values across clusters (z-scores) and score
-
-    rfm_score = z(frequency) + z(monetary) − z(recency_days)
-
-(recency is "lower is better", hence the minus). Clusters are ranked by
-score, best first, and labelled in order:
-
-    high_value → regular → occasional → at_risk
-
-With k = 4 each label is used once. If a different k is ever used, the
-ranked clusters are split into four near-equal groups in score order.
-"""
-
 from __future__ import annotations
 
 import numpy as np
@@ -44,7 +22,6 @@ def _z(s: pd.Series) -> pd.Series:
 
 
 def label_clusters(centroids: pd.DataFrame) -> dict[int, str]:
-    """Return {cluster_id: label}."""
     c = centroids.copy()
     c["rfm_score"] = _z(c["frequency"]) + _z(c["monetary"]) - _z(c["recency_days"])
     c = c.sort_values("rfm_score", ascending=False).reset_index(drop=True)
