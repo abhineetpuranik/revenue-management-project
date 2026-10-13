@@ -64,6 +64,12 @@ yarn-error.log*
 # ── MySQL ─────────────────────────────────────────────────────────────────────
 *.sql.bak
 
-# Generated data (regenerate with the scripts)
+# ── Generated data (reproducible from the fixed seed — see README) ───────────
 data-pipeline/data/raw/
 data-pipeline/data/cleaned/
+# Outputs that depend on local runs (model / API key) — never commit
+data-pipeline/data/pricing/pricing_recommendation.csv
+data-pipeline/data/explanations/
+
+# ── Misc ─────────────────────────────────────────────────────────────────────
+*.bundle
