@@ -6,7 +6,7 @@
 --   revenue_management     — application schema (used by the Flask API,
 --                            feature engineering, forecasting, pricing).
 --   revenue_management_gt  — ground-truth holdout schema (used ONLY by
---                            Phase 6/7 evaluation code; NEVER joined into
+--                            validate_*.py evaluation code; NEVER joined into
 --                            normal application queries).
 --
 -- Ground-truth separation rationale
