@@ -321,6 +321,31 @@ CREATE TABLE IF NOT EXISTS pricing_recommendation (
     CONSTRAINT fk_recommendation_product FOREIGN KEY (product_id) REFERENCES product(product_id)
 ) ENGINE=InnoDB;
 
+-- ------------------------------------------------------------
+-- 4d. llm_explanation  — Phase 9 (explanations/generate_explanations.py)
+--     One plain-English sentence per pricing recommendation and per
+--     customer segment. source = llm | fallback (template used when
+--     the LLM failed or its output was rejected by the guardrails).
+--     payload_json is exactly what the LLM saw; payload_hash drives
+--     the cache (unchanged payload + model => no new API call).
+-- ------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS llm_explanation (
+    explanation_id    INT            NOT NULL,
+    entity_type       VARCHAR(10)    NOT NULL,   -- pricing | segment
+    entity_id         VARCHAR(20)    NOT NULL,   -- product_id or segment_label
+    explanation_text  VARCHAR(1000)  NOT NULL,
+    source            VARCHAR(10)    NOT NULL,   -- llm | fallback
+    payload_json      TEXT           NOT NULL,
+    payload_hash      CHAR(64)       NOT NULL,
+    model_name        VARCHAR(60)    NOT NULL,
+    guardrail_status  VARCHAR(10)    NOT NULL,   -- passed | fallback
+    rejection_reason  VARCHAR(255)   NOT NULL DEFAULT '',
+    attempts          INT            NOT NULL,
+    generated_at      DATETIME       NOT NULL,
+    CONSTRAINT pk_llm_explanation PRIMARY KEY (explanation_id),
+    CONSTRAINT uq_llm_explanation_entity UNIQUE (entity_type, entity_id)
+) ENGINE=InnoDB;
+
 -- ============================================================
 -- End of schema
 -- ============================================================
