@@ -238,5 +238,35 @@ CREATE TABLE gt_customer_segment (
 
 
 -- ============================================================
+-- 4. Model output tables (application schema)
+--    Created by the pipeline modules at run time as well
+--    (CREATE TABLE IF NOT EXISTS), so they survive without
+--    re-running this file. Kept here as the documented design.
+-- ============================================================
+
+USE revenue_management;
+
+-- ------------------------------------------------------------
+-- 4a. product_elasticity  — Phase 7 (pricing/estimate_elasticity.py)
+--     One log-log OLS estimate per product. reliable_flag = 0
+--     means Phase 8 must not move that product's price.
+-- ------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS product_elasticity (
+    product_id          VARCHAR(10)   NOT NULL,
+    category            VARCHAR(30)   NOT NULL,
+    elasticity          DECIMAL(8,4)  NULL,
+    std_error           DECIMAL(8,4)  NULL,
+    ci_low              DECIMAL(8,4)  NULL,
+    ci_high             DECIMAL(8,4)  NULL,
+    r_squared           DECIMAL(6,4)  NULL,
+    n_obs               INT           NOT NULL,
+    reliable_flag       TINYINT(1)    NOT NULL,
+    unreliable_reasons  VARCHAR(100)  NOT NULL DEFAULT '',
+    estimated_at        DATETIME      NOT NULL,
+    CONSTRAINT pk_product_elasticity PRIMARY KEY (product_id),
+    CONSTRAINT fk_elasticity_product FOREIGN KEY (product_id) REFERENCES product(product_id)
+) ENGINE=InnoDB;
+
+-- ============================================================
 -- End of schema
 -- ============================================================
