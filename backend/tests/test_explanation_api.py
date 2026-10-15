@@ -87,10 +87,10 @@ class TestPricingExplanation:
 
     def test_missing_explanation_graceful(self, client, app):
         """
-        If the DB returns no row, explanation_available must be False
-        and HTTP status must still be 200 — not 404 or 500.
+        If the service returns explanation_available=False,
+        HTTP status must still be 200.
         """
-        with patch("services.explanation_service.get_pricing_explanation") as mock_svc:
+        with patch("routes.explanations.get_pricing_explanation") as mock_svc:
             mock_svc.return_value = {
                 "explanation_available": False,
                 "explanation":           None,
@@ -108,17 +108,16 @@ class TestPricingExplanation:
 
     def test_service_exception_still_200(self, client, app):
         """
-        Even if the service raises unexpectedly, the endpoint must not
-        return a raw 500 with a stack trace.  Flask's error handler
-        should catch it and return the standard error JSON.
+        If the service raises unexpectedly, the route's try/except must
+        catch it and return HTTP 200 with explanation_available=False,
+        never a crash or unhandled 500.
         """
         with patch("routes.explanations.get_pricing_explanation",
                    side_effect=RuntimeError("db timeout")):
             resp, data = get_json(client, "/api/pricing/P001/explanation")
-        # 500 is acceptable here as long as it uses the standard error format
-        assert resp.status_code in (200, 500)
-        if resp.status_code == 500:
-            assert "error" in data
+        assert resp.status_code == 200
+        assert data["explanation_available"] is False
+        assert data["explanation"] is None
 
 
 # ── Forecast explanation (unsupported) ───────────────────────────────────

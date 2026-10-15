@@ -43,7 +43,21 @@ def pricing_explanation(product_id: str):
     if not product_exists(engine, product_id):
         abort(404, description=f"Product '{product_id}' not found.")
 
-    return jsonify(get_pricing_explanation(engine, product_id))
+    try:
+        result = get_pricing_explanation(engine, product_id)
+    except Exception as exc:  # noqa: BLE001
+        current_app.logger.exception("Explanation service error for %s: %s", product_id, exc)
+        result = {
+            "explanation_available": False,
+            "explanation":           None,
+            "unavailable_reason":    "An internal error occurred while fetching the explanation.",
+            "payload":               None,
+            "source":                None,
+            "generated_at":          None,
+            "entity_type":           "pricing",
+            "entity_id":             product_id,
+        }
+    return jsonify(result)
 
 
 @explanations_bp.get("/api/forecast/<string:product_id>/explanation")
