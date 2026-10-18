@@ -1,0 +1,77 @@
+/**
+ * Design tokens for the neo-brutalist bento dashboard.
+ * All component styles must reference these tokens via var(--token-name).
+ */
+
+:root {
+  /* ── Colors ────────────────────────────────────────────────────────────── */
+  --color-background: #F4F1EA;
+  --color-ink: #111111;
+  
+  /* Accent palette — flat, saturated */
+  --color-lime: #C6F24E;
+  --color-pink: #FF7BA5;
+  --color-purple: #6C4CF1;
+  --color-yellow: #FFD84D;
+  --color-teal: #3CC9B4;
+  --color-coral: #FF6B57;
+  --color-blue: #3B82D6;
+  
+  /* Semantic mappings */
+  --color-success: var(--color-teal);
+  --color-error: var(--color-coral);
+  --color-warning: var(--color-yellow);
+  --color-primary: var(--color-lime);
+  
+  /* ── Typography ────────────────────────────────────────────────────────── */
+  --font-heading: 'Space Grotesk', sans-serif;
+  --font-mono: 'Space Mono', monospace;
+  
+  --font-size-micro: 0.6875rem;     /* 11px — micro labels */
+  --font-size-small: 0.8125rem;     /* 13px — tags, captions */
+  --font-size-base: 0.9375rem;      /* 15px — body text */
+  --font-size-medium: 1.125rem;     /* 18px — section labels */
+  --font-size-large: 1.5rem;        /* 24px — page titles */
+  --font-size-xlarge: 2rem;         /* 32px — stat numbers */
+  
+  --font-weight-normal: 400;
+  --font-weight-bold: 700;
+  
+  --line-height-tight: 1.2;
+  --line-height-normal: 1.5;
+  --line-height-relaxed: 1.6;
+  
+  --letter-spacing-tight: -0.02em;
+  --letter-spacing-wide: 0.08em;
+  
+  /* ── Spacing ───────────────────────────────────────────────────────────── */
+  --spacing-xs: 0.5rem;    /* 8px */
+  --spacing-sm: 0.75rem;   /* 12px */
+  --spacing-md: 1rem;      /* 16px */
+  --spacing-lg: 1.5rem;    /* 24px */
+  --spacing-xl: 2rem;      /* 32px */
+  --spacing-2xl: 3rem;     /* 48px */
+  
+  /* ── Layout ────────────────────────────────────────────────────────────── */
+  --border-width: 3px;
+  --border-radius: 6px;
+  
+  --shadow-offset: 5px;
+  --shadow-base: var(--shadow-offset) var(--shadow-offset) 0 var(--color-ink);
+  --shadow-hover: 8px 8px 0 var(--color-ink);
+  --shadow-active: 2px 2px 0 var(--color-ink);
+  
+  --grid-size: 24px;
+  
+  /* ── Transitions ───────────────────────────────────────────────────────── */
+  --transition-fast: 120ms ease-out;
+  --transition-base: 200ms ease-out;
+  
+  /* ── Z-index ───────────────────────────────────────────────────────────── */
+  --z-base: 1;
+  --z-dropdown: 100;
+  --z-sticky: 200;
+  --z-header: 300;
+  --z-modal: 400;
+  --z-tooltip: 500;
+}

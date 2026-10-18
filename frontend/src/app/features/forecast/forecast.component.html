@@ -1,0 +1,210 @@
+<app-page-header
+  label="[ 01 / FORECAST ]"
+  title="Demand Forecast"
+  description="Weekly unit demand — 12 weeks history + 8-week XGBoost test window"
+/>
+
+<div class="forecast-layout">
+  <!-- ── Left sidebar: category chips + product list ─────────────────── -->
+  <aside class="forecast-sidebar">
+    <app-card caption="CATEGORY">
+      <div class="category-chips">
+        @for (cat of categories; track cat) {
+          <button
+            type="button"
+            class="chip mono"
+            [class.chip--active]="selectedCategory() === cat"
+            (click)="selectCategory(cat)"
+          >
+            {{ cat }}
+          </button>
+        }
+      </div>
+    </app-card>
+
+    <app-card caption="PRODUCT">
+      <input
+        type="search"
+        class="product-search mono"
+        placeholder="Search P001…"
+        [value]="productSearch()"
+        (input)="productSearch.set($any($event.target).value)"
+        aria-label="Search products"
+      />
+
+      @if (productsLoading()) {
+        <app-loading-state message="Loading products…" />
+      } @else if (productsError()) {
+        <app-error-state [message]="productsError()!" (retry)="retryProducts()" />
+      } @else if (filteredProducts().length === 0) {
+        <app-empty-state message="No products match." />
+      } @else {
+        <ul class="product-list" role="listbox" aria-label="Products">
+          @for (product of filteredProducts(); track product.product_id) {
+            <li
+              role="option"
+              class="product-item mono"
+              [class.product-item--selected]="selectedProductId() === product.product_id"
+              [attr.aria-selected]="selectedProductId() === product.product_id"
+              (click)="selectProduct(product.product_id)"
+              (keydown.enter)="selectProduct(product.product_id)"
+              (keydown.space)="selectProduct(product.product_id)"
+              [tabindex]="0"
+            >
+              <span class="product-item__id">{{ product.product_id }}</span>
+              <span class="product-item__price">£{{ formatNum(product.base_price) }}</span>
+            </li>
+          }
+        </ul>
+      }
+    </app-card>
+  </aside>
+
+  <!-- ── Right main area ─────────────────────────────────────────────── -->
+  <div class="forecast-main">
+
+    <!-- Chart -->
+    <app-card [caption]="selectedProduct() ? selectedProduct()!.product_id + ' — Weekly Demand' : 'SELECT A PRODUCT'">
+      <div class="chart-area">
+        @if (forecastLoading()) {
+          <app-loading-state message="Loading forecast…" />
+        } @else if (forecastError()) {
+          <app-error-state [message]="forecastError()!" (retry)="retryForecast()" />
+        } @else if (!forecast()) {
+          <app-empty-state message="Select a product to view its forecast." />
+        } @else {
+          <app-chart-wrapper [config]="chartConfig()" />
+          <div class="chart-legend-note mono">
+            <span class="legend-dot legend-dot--history"></span> History
+            <span class="legend-dot legend-dot--test"></span> Test window
+            <span class="legend-dash legend-dash--predicted"></span> Predicted
+          </div>
+        }
+      </div>
+    </app-card>
+
+    <!-- Metric tiles -->
+    @if (metricsLoading()) {
+      <div class="metrics-row">
+        <app-loading-state message="Loading metrics…" />
+      </div>
+    } @else if (metricsError()) {
+      <app-error-state [message]="metricsError()!" (retry)="retryMetrics()" />
+    } @else if (metrics() && selectedMetrics()) {
+      <div class="metrics-row">
+        <app-stat-tile
+          [value]="formatNum(selectedMetrics()!.mape, 1) + '%'"
+          label="MAPE"
+          bgColor="var(--color-lime)"
+        />
+        <app-stat-tile
+          [value]="formatNum(selectedMetrics()!.rmse, 1)"
+          label="RMSE (units/wk)"
+          bgColor="var(--color-teal)"
+        />
+        <app-stat-tile
+          [value]="formatNum(selectedMetrics()!.mae, 1)"
+          label="MAE (units/wk)"
+          bgColor="var(--color-pink)"
+        />
+        <app-stat-tile
+          [value]="metrics()!.selected_model"
+          label="Selected Model"
+          bgColor="var(--color-purple)"
+        />
+      </div>
+
+      <!-- Model comparison table -->
+      <app-card caption="MODEL COMPARISON">
+        <table class="data-table" aria-label="Model comparison">
+          <thead>
+            <tr>
+              <th class="mono">Model</th>
+              <th class="mono">MAE</th>
+              <th class="mono">MAPE</th>
+              <th class="mono">RMSE</th>
+              <th class="mono">Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (row of modelRows(); track row.key) {
+              <tr [class.row--selected]="row.selected">
+                <td class="mono cell--model">{{ row.name }}</td>
+                <td class="mono">{{ formatNum(row.mae) }}</td>
+                <td class="mono">{{ formatPct(row.mape) }}</td>
+                <td class="mono">{{ formatNum(row.rmse) }}</td>
+                <td>
+                  @if (row.selected) {
+                    <span class="badge badge--selected mono">✓ Selected</span>
+                  } @else {
+                    <span class="badge badge--baseline mono">Baseline</span>
+                  }
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+
+        <p class="selection-reason mono">
+          {{ metrics()!.selected_reason }}
+        </p>
+
+        <div class="training-meta mono">
+          <span>Train: {{ metrics()!.train_start }} → {{ metrics()!.train_end }}
+          ({{ metrics()!.n_train }} rows)</span>
+          <span>Test: {{ metrics()!.test_start }} → {{ metrics()!.test_end }}
+          ({{ metrics()!.n_test }} rows)</span>
+        </div>
+      </app-card>
+    }
+
+    <!-- Weekly data table -->
+    @if (forecast()) {
+      <app-card caption="WEEKLY DATA">
+        <div class="table-scroll">
+          <table class="data-table" aria-label="Weekly forecast data">
+            <thead>
+              <tr>
+                <th class="mono">Week</th>
+                <th class="mono">Date</th>
+                <th class="mono">Type</th>
+                <th class="mono">Actual</th>
+                <th class="mono">Predicted</th>
+                <th class="mono">Error</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (row of forecast()!.series; track row.week_start_date) {
+                <tr [class.row--test]="row.row_type === 'test'">
+                  <td class="mono">W{{ row.iso_week }} {{ row.iso_year }}</td>
+                  <td class="mono">{{ row.week_start_date }}</td>
+                  <td>
+                    <span
+                      class="row-type-badge mono"
+                      [class.row-type-badge--history]="row.row_type === 'history'"
+                      [class.row-type-badge--test]="row.row_type === 'test'"
+                    >
+                      {{ row.row_type }}
+                    </span>
+                  </td>
+                  <td class="mono cell--number">{{ row.actual_units }}</td>
+                  <td class="mono cell--number">
+                    {{ row.predicted_units != null ? row.predicted_units : '—' }}
+                  </td>
+                  <td class="mono cell--number">
+                    @if (row.predicted_units != null) {
+                      {{ formatNum(row.actual_units - row.predicted_units) }}
+                    } @else {
+                      —
+                    }
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      </app-card>
+    }
+
+  </div>
+</div>

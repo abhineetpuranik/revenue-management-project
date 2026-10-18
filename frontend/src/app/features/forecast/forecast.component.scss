@@ -1,0 +1,279 @@
+/* ── Layout ────────────────────────────────────────────────────────────── */
+
+.forecast-layout {
+  display: grid;
+  grid-template-columns: 240px 1fr;
+  gap: var(--spacing-lg);
+  align-items: start;
+
+  @media (max-width: 900px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.forecast-sidebar {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-md);
+  position: sticky;
+  top: 80px; /* below header */
+  max-height: calc(100vh - 120px);
+  overflow-y: auto;
+}
+
+.forecast-main {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-lg);
+}
+
+/* ── Category chips ─────────────────────────────────────────────────────── */
+
+.category-chips {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xs);
+}
+
+.chip {
+  padding: var(--spacing-xs) var(--spacing-sm);
+  border: var(--border-width) solid var(--color-ink);
+  border-radius: var(--border-radius);
+  background: white;
+  font-size: var(--font-size-small);
+  text-align: left;
+  text-transform: uppercase;
+  letter-spacing: var(--letter-spacing-wide);
+  transition: all var(--transition-fast);
+  box-shadow: var(--shadow-base);
+  cursor: pointer;
+}
+
+.chip:hover {
+  transform: translate(-2px, -2px);
+  box-shadow: var(--shadow-hover);
+}
+
+.chip--active {
+  background: var(--color-ink);
+  color: var(--color-lime);
+}
+
+/* ── Product list ───────────────────────────────────────────────────────── */
+
+.product-search {
+  width: 100%;
+  padding: var(--spacing-xs) var(--spacing-sm);
+  border: var(--border-width) solid var(--color-ink);
+  border-radius: var(--border-radius);
+  background: white;
+  font-size: var(--font-size-small);
+  margin-bottom: var(--spacing-sm);
+  box-shadow: var(--shadow-base);
+}
+
+.product-search:focus-visible {
+  outline: var(--border-width) solid var(--color-purple);
+  outline-offset: 2px;
+}
+
+.product-list {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+.product-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 6px var(--spacing-sm);
+  border: 2px solid transparent;
+  border-radius: var(--border-radius);
+  cursor: pointer;
+  font-size: var(--font-size-small);
+  transition: all var(--transition-fast);
+}
+
+.product-item:hover {
+  border-color: var(--color-ink);
+  background: var(--color-lime);
+}
+
+.product-item--selected {
+  background: var(--color-ink);
+  color: var(--color-lime);
+  border-color: var(--color-ink);
+}
+
+.product-item__id {
+  font-weight: var(--font-weight-bold);
+}
+
+.product-item__price {
+  opacity: 0.75;
+}
+
+/* ── Chart area ─────────────────────────────────────────────────────────── */
+
+.chart-area {
+  min-height: 320px;
+}
+
+.chart-legend-note {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-md);
+  margin-top: var(--spacing-sm);
+  font-size: var(--font-size-micro);
+  opacity: 0.7;
+}
+
+.legend-dot {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  border: 2px solid var(--color-ink);
+}
+
+.legend-dot--history { background: var(--color-lime); }
+.legend-dot--test    { background: var(--color-teal); }
+
+.legend-dash--predicted {
+  display: inline-block;
+  width: 20px;
+  height: 3px;
+  background: var(--color-purple);
+  border-radius: 2px;
+}
+
+/* ── Metrics row ────────────────────────────────────────────────────────── */
+
+.metrics-row {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: var(--spacing-md);
+
+  @media (max-width: 1100px) {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  @media (max-width: 600px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ── Data tables ────────────────────────────────────────────────────────── */
+
+.table-scroll {
+  overflow-x: auto;
+}
+
+.data-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--font-size-small);
+
+  th {
+    text-align: left;
+    padding: var(--spacing-sm) var(--spacing-md);
+    border-bottom: var(--border-width) solid var(--color-ink);
+    background: var(--color-ink);
+    color: var(--color-lime);
+    text-transform: uppercase;
+    letter-spacing: var(--letter-spacing-wide);
+    white-space: nowrap;
+  }
+
+  td {
+    padding: var(--spacing-sm) var(--spacing-md);
+    border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+  }
+
+  tr:last-child td {
+    border-bottom: none;
+  }
+
+  tr:hover td {
+    background: rgba(198, 242, 78, 0.12);
+  }
+}
+
+.row--selected td {
+  background: rgba(198, 242, 78, 0.2);
+}
+
+.row--test td {
+  background: rgba(60, 201, 180, 0.06);
+}
+
+.cell--model {
+  font-weight: var(--font-weight-bold);
+}
+
+.cell--number {
+  text-align: right;
+}
+
+.badge {
+  display: inline-block;
+  padding: 2px var(--spacing-sm);
+  border: var(--border-width) solid var(--color-ink);
+  border-radius: var(--border-radius);
+  font-size: var(--font-size-micro);
+  text-transform: uppercase;
+  letter-spacing: var(--letter-spacing-wide);
+}
+
+.badge--selected {
+  background: var(--color-lime);
+  color: var(--color-ink);
+}
+
+.badge--baseline {
+  background: white;
+  opacity: 0.6;
+}
+
+.row-type-badge {
+  display: inline-block;
+  padding: 2px 6px;
+  border-radius: var(--border-radius);
+  font-size: var(--font-size-micro);
+  text-transform: uppercase;
+  letter-spacing: var(--letter-spacing-wide);
+  border: 2px solid var(--color-ink);
+}
+
+.row-type-badge--history {
+  background: var(--color-lime);
+}
+
+.row-type-badge--test {
+  background: var(--color-teal);
+  color: white;
+}
+
+/* ── Training metadata ──────────────────────────────────────────────────── */
+
+.selection-reason {
+  margin-top: var(--spacing-md);
+  font-size: var(--font-size-small);
+  opacity: 0.8;
+  padding: var(--spacing-sm) var(--spacing-md);
+  background: rgba(198, 242, 78, 0.15);
+  border-left: var(--border-width) solid var(--color-lime);
+  border-radius: 0 var(--border-radius) var(--border-radius) 0;
+}
+
+.training-meta {
+  display: flex;
+  gap: var(--spacing-xl);
+  margin-top: var(--spacing-sm);
+  font-size: var(--font-size-micro);
+  opacity: 0.6;
+  flex-wrap: wrap;
+}

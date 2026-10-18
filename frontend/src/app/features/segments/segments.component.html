@@ -1,0 +1,235 @@
+<app-page-header
+  label="[ 02 / SEGMENTS ]"
+  title="Customer Segments"
+  description="RFM-based K-Means segmentation — high-value, regular, occasional, at-risk"
+/>
+
+<!-- ── Loading / Error state for segments summary ─────────────────────── -->
+@if (segmentsLoading()) {
+  <app-loading-state message="Loading segments…" />
+} @else if (segmentsError()) {
+  <app-error-state [message]="segmentsError()!" (retry)="retrySegments()" />
+} @else if (segments()) {
+
+  <!-- ── Overview stat tiles ─────────────────────────────────────────── -->
+  <div class="overview-grid">
+    <app-stat-tile
+      [value]="segments()!.total_customers.toLocaleString()"
+      label="Total Customers"
+      bgColor="var(--color-lime)"
+    />
+    <app-stat-tile
+      [value]="segments()!.n_clusters"
+      label="Segments (k)"
+      bgColor="var(--color-teal)"
+    />
+    <app-stat-tile
+      [value]="formatNum(segments()!.silhouette_score, 4)"
+      label="Silhouette Score"
+      bgColor="var(--color-purple)"
+    />
+    <app-stat-tile
+      [value]="segments()!.segments.length"
+      label="Labelled Groups"
+      bgColor="var(--color-pink)"
+    />
+  </div>
+
+  <!-- ── Segment table + doughnut ────────────────────────────────────── -->
+  <div class="segments-grid">
+    <app-card caption="SEGMENT SUMMARY">
+      <div class="table-scroll">
+        <table class="data-table" aria-label="Segment summary table">
+          <thead>
+            <tr>
+              <th class="mono">Segment</th>
+              <th class="mono">Customers</th>
+              <th class="mono">Share</th>
+              <th class="mono">Revenue %</th>
+              <th class="mono">Avg Recency</th>
+              <th class="mono">Avg Frequency</th>
+              <th class="mono">Avg Spend £</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (seg of segments()!.segments; track seg.segment_label) {
+              <tr>
+                <td class="mono">
+                  <span
+                    class="segment-dot"
+                    [style.background-color]="getColor(seg.segment_label)"
+                  ></span>
+                  <span class="segment-name">{{ formatLabel(seg.segment_label) }}</span>
+                </td>
+                <td class="mono cell--number">{{ seg.customer_count.toLocaleString() }}</td>
+                <td class="bar-cell mono">
+                  <div class="bar-track">
+                    <div
+                      class="bar-fill"
+                      [style.width.px]="barWidth(seg.share_pct)"
+                      [style.background-color]="getColor(seg.segment_label)"
+                    ></div>
+                    <span class="bar-label">{{ formatNum(seg.share_pct, 1) }}%</span>
+                  </div>
+                </td>
+                <td class="bar-cell mono">
+                  <div class="bar-track">
+                    <div
+                      class="bar-fill"
+                      [style.width.px]="barWidth(seg.revenue_share_pct)"
+                      [style.background-color]="getColor(seg.segment_label)"
+                    ></div>
+                    <span class="bar-label">{{ formatNum(seg.revenue_share_pct, 1) }}%</span>
+                  </div>
+                </td>
+                <td class="mono cell--number">{{ formatNum(seg.mean_recency_days, 1) }}d</td>
+                <td class="mono cell--number">{{ Math.round(seg.mean_frequency).toLocaleString() }}</td>
+                <td class="mono cell--number">£{{ formatNum(seg.mean_monetary, 0) }}</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </app-card>
+
+    <!-- Doughnut -->
+    <div>
+      <app-card caption="CUSTOMER SHARE">
+        <div class="doughnut-area">
+          <app-chart-wrapper [config]="doughnutConfig()" />
+          <p class="chart-subtitle mono">Revenue contribution by segment</p>
+        </div>
+      </app-card>
+    </div>
+  </div>
+
+  <!-- ── Customer lookup ────────────────────────────────────────────── -->
+  <app-card caption="CUSTOMER LOOKUP">
+    <div class="lookup-form">
+      <input
+        type="search"
+        class="lookup-input mono"
+        placeholder="e.g. C0042"
+        [(ngModel)]="lookupId"
+        (keydown.enter)="lookupCustomer()"
+        aria-label="Customer ID"
+      />
+      <button type="button" class="lookup-btn" (click)="lookupCustomer()">
+        Look Up
+      </button>
+    </div>
+
+    @if (lookupLoading()) {
+      <app-loading-state message="Looking up customer…" />
+    } @else if (lookupError()) {
+      <app-error-state [message]="lookupError()!" [showRetry]="false" (retry)="lookupCustomer()" />
+    } @else if (lookupResult()) {
+      <div class="customer-result">
+        <div class="customer-field">
+          <span class="customer-field__label mono">ID</span>
+          <span class="customer-field__value mono">{{ lookupResult()!.customer_id }}</span>
+        </div>
+        <div class="customer-field">
+          <span class="customer-field__label mono">Segment</span>
+          <span
+            class="customer-field__value mono"
+            [style.color]="getColor(lookupResult()!.segment_label)"
+          >
+            {{ formatLabel(lookupResult()!.segment_label) }}
+          </span>
+        </div>
+        <div class="customer-field">
+          <span class="customer-field__label mono">Recency</span>
+          <span class="customer-field__value mono">{{ lookupResult()!.recency_days }} day(s)</span>
+        </div>
+        <div class="customer-field">
+          <span class="customer-field__label mono">Frequency</span>
+          <span class="customer-field__value mono">{{ lookupResult()!.frequency.toLocaleString() }} txns</span>
+        </div>
+        <div class="customer-field">
+          <span class="customer-field__label mono">Monetary</span>
+          <span class="customer-field__value mono">£{{ formatNum(lookupResult()!.monetary, 2) }}</span>
+        </div>
+      </div>
+    }
+  </app-card>
+
+  <!-- ── Paginated customer table ───────────────────────────────────── -->
+  <app-card caption="ALL CUSTOMERS">
+    <div class="filter-row">
+      @for (label of filterLabels; track label) {
+        <button
+          type="button"
+          class="segment-filter-btn mono"
+          [class.segment-filter-btn--active]="customerFilter() === label"
+          (click)="setCustomerFilter(label)"
+        >
+          {{ label === '' ? 'All' : formatLabel(label) }}
+        </button>
+      }
+    </div>
+
+    @if (customersLoading()) {
+      <app-loading-state message="Loading customers…" />
+    } @else if (customersError()) {
+      <app-error-state [message]="customersError()!" (retry)="retryCustomers()" />
+    } @else if (customersData() && customersData()!.customers.length === 0) {
+      <app-empty-state message="No customers found for this filter." />
+    } @else if (customersData()) {
+      <div class="table-scroll">
+        <table class="data-table" aria-label="Customer table">
+          <thead>
+            <tr>
+              <th class="mono">Customer ID</th>
+              <th class="mono">Segment</th>
+              <th class="mono">Recency</th>
+              <th class="mono">Frequency</th>
+              <th class="mono">Monetary £</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (c of customersData()!.customers; track c.customer_id) {
+              <tr>
+                <td class="mono">{{ c.customer_id }}</td>
+                <td class="mono">
+                  <span
+                    class="segment-dot"
+                    [style.background-color]="getColor(c.segment_label)"
+                  ></span>
+                  <span class="segment-name">{{ formatLabel(c.segment_label) }}</span>
+                </td>
+                <td class="mono cell--number">{{ c.recency_days }}d</td>
+                <td class="mono cell--number">{{ c.frequency.toLocaleString() }}</td>
+                <td class="mono cell--number">£{{ formatNum(c.monetary, 2) }}</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+
+      <div class="pagination">
+        <span class="pagination-info mono">
+          Page {{ customersData()!.page }} of {{ customersData()!.pages }}
+          ({{ customersData()!.total.toLocaleString() }} total)
+        </span>
+        <button
+          type="button"
+          class="pagination-btn mono"
+          [disabled]="customersPage() === 1"
+          (click)="goToPage(customersPage() - 1)"
+        >
+          ← Prev
+        </button>
+        <button
+          type="button"
+          class="pagination-btn mono"
+          [disabled]="customersPage() >= customersData()!.pages"
+          (click)="goToPage(customersPage() + 1)"
+        >
+          Next →
+        </button>
+      </div>
+    }
+  </app-card>
+
+}

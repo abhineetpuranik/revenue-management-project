@@ -364,3 +364,259 @@ Returns one customer's segment label and RFM values.
 - The `monetary` field in customer/segment responses represents total lifetime spend in the dataset, not per-visit basket size.
 - The `silhouette_score` in `/api/segments` is a fixed value embedded in the service layer (not stored in MySQL). It reflects the k=4 clustering run during Phase 6.
 - Phase 10b will add `/api/pricing` and `/api/explanations` endpoints using the same error format and the same blueprint pattern.
+
+---
+
+# Phase 10b Endpoints
+
+---
+
+## Pricing
+
+### `GET /api/pricing/<product_id>`
+
+Pricing recommendation for one product from Phase 8.
+
+Returns HTTP 200 even when no valid candidate price exists (`recommendation_available: false`). Returns 404 only when the product_id is not in the database.
+
+**Response 200 — normal recommendation**
+```json
+{
+  "product_id": "P001",
+  "category": "Staples",
+  "recommendation_available": true,
+  "no_candidate_reason": null,
+  "current_price": 3.28,
+  "current_revenue": 1344.12,
+  "unit_cost": 2.786,
+  "available_stock": 17750,
+  "elasticity": -0.4676,
+  "baseline_demand": 409.79,
+  "recommended_price": 3.77,
+  "change_pct": 0.1494,
+  "expected_demand": 383.96,
+  "expected_revenue": 1447.54,
+  "revenue_change_pct": 0.0769,
+  "revenue_change_abs": 103.42,
+  "margin_pct": 0.261,
+  "expected_profit": 377.82,
+  "stock_limited": false,
+  "binding_constraint": "MAX_CHANGE",
+  "reason_codes": [],
+  "constraints_applied": {
+    "min_margin_pct": 0.1,
+    "max_price_change_pct": 0.15
+  },
+  "model_type": "XGBoost",
+  "forecast_week": "2025-W01",
+  "generated_at": "2026-10-14 00:03:48"
+}
+```
+
+**Response 200 — current price already breaks a constraint (P027)**
+```json
+{
+  "product_id": "P027",
+  "recommendation_available": true,
+  "binding_constraint": "MARGIN",
+  "reason_codes": ["CURRENT_PRICE_BREAKS_MARGIN"],
+  "change_pct": 0.0699,
+  "revenue_change_pct": -0.0487
+}
+```
+
+**Response 200 — no valid candidate (if it occurs)**
+```json
+{
+  "recommendation_available": false,
+  "no_candidate_reason": "NO_FEASIBLE_PRICE",
+  "binding_constraint": "NO_FEASIBLE_PRICE"
+}
+```
+
+**Error responses**
+
+| Status | When |
+|---|---|
+| 404 | `product_id` not in the database |
+| 404 | Phase 8 has not been run yet (no row in pricing_recommendation) |
+
+---
+
+### `GET /api/pricing/recommendations`
+
+Paginated list of recommendations for all 50 products.
+
+**Query parameters**
+
+| Name | Type | Default | Max | Description |
+|---|---|---|---|---|
+| `category` | string | — | — | Filter by category. Returns empty list (not 404) if no match. |
+| `page` | int | `1` | — | 400 if < 1. |
+| `page_size` | int | `50` | `200` | 400 if < 1 or > 200. |
+
+**Response 200**
+```json
+{
+  "total": 50,
+  "page": 1,
+  "page_size": 50,
+  "pages": 1,
+  "recommendations": [
+    { "product_id": "P001", "category": "Staples", "recommended_price": 3.77, "..." : "..." }
+  ]
+}
+```
+
+Each item has the same fields as `GET /api/pricing/<product_id>`.
+
+**Error responses** — same as `/api/segments/customers` (400 for bad pagination).
+
+---
+
+## Explanations
+
+Phase 9 supports two entity types: **pricing** and **segment**.
+Forecast explanations are not supported — that endpoint returns HTTP 200 with `explanation_available: false` rather than 404, so Phase 11 can always call the same pattern.
+
+All explanation endpoints return HTTP 200 even when no explanation is stored or available. They never return 500 due to an LLM failure.
+
+---
+
+### `GET /api/pricing/<product_id>/explanation`
+
+Natural-language explanation for a product's pricing recommendation.
+
+**Response 200 — explanation available**
+```json
+{
+  "entity_type": "pricing",
+  "entity_id": "P027",
+  "explanation_available": true,
+  "explanation": "Raise the price of P027 (Electronics) by 7.0%, from 53.93 to 57.70, because it is highly price-sensitive. Expected weekly sales are 44 units and weekly revenue should decrease by 4.9% (limit: the minimum profit margin rule).",
+  "source": "fallback",
+  "guardrail_status": "fallback",
+  "model_name": "gemini-3.5-flash",
+  "attempts": 2,
+  "payload": {
+    "action": "raise",
+    "category": "Electronics",
+    "current_price": "53.93",
+    "recommended_price": "57.70",
+    "price_change": "7.0%",
+    "price_sensitivity": "highly price-sensitive",
+    "revenue_direction": "decrease",
+    "revenue_change": "4.9%",
+    "limited_by": "the minimum profit margin rule",
+    "expected_weekly_units": "44",
+    "weekly_units_at_current_price": "49",
+    "product_id": "P027"
+  },
+  "generated_at": "2026-10-15 08:38:57"
+}
+```
+
+**Response 200 — explanation not yet generated**
+```json
+{
+  "entity_type": "pricing",
+  "entity_id": "P001",
+  "explanation_available": false,
+  "explanation": null,
+  "unavailable_reason": "No explanation has been generated yet. Run python -m explanations.generate_explanations in the data pipeline.",
+  "payload": null,
+  "source": null,
+  "generated_at": null
+}
+```
+
+**Response 200 — internal error (graceful degradation, REQ-22)**
+```json
+{
+  "explanation_available": false,
+  "explanation": null,
+  "unavailable_reason": "An internal error occurred while fetching the explanation."
+}
+```
+
+**Error responses**
+
+| Status | When |
+|---|---|
+| 404 | `product_id` not in the database |
+
+---
+
+### `GET /api/forecast/<product_id>/explanation`
+
+Forecast explanations are **not supported** by Phase 9. Always returns HTTP 200 with `explanation_available: false` so Phase 11 does not need special-casing.
+
+**Response 200**
+```json
+{
+  "explanation_available": false,
+  "explanation": null,
+  "unavailable_reason": "Forecast explanations are not supported in Phase 9. Phase 9 generates explanations for 'pricing' and 'segment' entity types only.",
+  "payload": null,
+  "source": null,
+  "generated_at": null
+}
+```
+
+**Error responses**
+
+| Status | When |
+|---|---|
+| 404 | `product_id` not in the database |
+
+---
+
+### `GET /api/segments/<segment_label>/explanation`
+
+Natural-language description of a customer segment.
+
+**Path parameters**
+
+| Name | Valid values |
+|---|---|
+| `segment_label` | `high_value`, `regular`, `occasional`, `at_risk` |
+
+**Response 200**
+```json
+{
+  "entity_type": "segment",
+  "entity_id": "high_value",
+  "explanation_available": true,
+  "explanation": "High-value customers: 160 customers (16.0% of customers) bringing 40.1% of revenue. On average they bought on 1,037 days and spent 58,087.23 in total.",
+  "source": "fallback",
+  "guardrail_status": "fallback",
+  "model_name": "gemini-3.5-flash",
+  "attempts": 2,
+  "payload": {
+    "segment": "High-value customers",
+    "customers": "160",
+    "share_of_customers": "16.0%",
+    "share_of_revenue": "40.1%",
+    "average_purchase_days": "1,037",
+    "average_spend": "58,087.23",
+    "typical_days_since_last_purchase": "1"
+  },
+  "generated_at": "2026-10-15 08:38:57"
+}
+```
+
+**Error responses**
+
+| Status | When |
+|---|---|
+| 404 | `segment_label` not found |
+
+---
+
+## Phase 10b notes for the Angular developer
+
+- The `payload` field in explanation responses contains the exact structured numbers the LLM was given. You can use it to cross-check any number that appears in the explanation text.
+- `source` tells you the origin: `"llm"` = real Gemini response, `"fallback"` = template sentence (LLM was rejected by guardrails), `"mock"` = no API key configured.
+- `binding_constraint` in pricing responses explains what stopped the recommendation from going further. See the constraint table in [results.md](results.md) for all possible values.
+- `revenue_change_abs` is `expected_revenue - current_revenue` in £, computed by the API for convenience.
+- The `constraints_applied` object always reflects what Phase 8 actually used (read from `pricing_config.py` at import time).

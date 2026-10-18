@@ -1,0 +1,17 @@
+.main-content {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: var(--spacing-xl);
+  min-height: calc(100vh - 130px);
+}
+
+.footer {
+  border-top: var(--border-width) solid var(--color-ink);
+  padding: var(--spacing-md) var(--spacing-xl);
+  text-align: center;
+}
+
+.footer__text {
+  font-size: var(--font-size-small);
+  opacity: 0.6;
+}
