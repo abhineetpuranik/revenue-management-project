@@ -1,5 +1,5 @@
 /**
- * API service — typed HTTP client for all Phase 10a endpoints.
+ * API service — typed HTTP client for all Phase 10a + 10b endpoints.
  * Components must never call HttpClient directly; use this service instead.
  */
 
@@ -10,12 +10,16 @@ import { environment } from '../../environments/environment';
 import type {
   ApiError,
   CustomersResponse,
+  ExplanationResponse,
   ForecastMetrics,
   ForecastResponse,
   HealthResponse,
   Product,
   CustomerSegment,
+  PricingRecommendation,
+  PricingRecommendationsResponse,
   SegmentsResponse,
+  SegmentLabel,
 } from './models/api.models';
 
 @Injectable({ providedIn: 'root' })
@@ -78,6 +82,46 @@ export class ApiService {
   getCustomerSegment(customerId: string): Observable<CustomerSegment> {
     return this.http
       .get<CustomerSegment>(`${this.baseUrl}/api/customers/${customerId}/segment`)
+      .pipe(catchError(this.handleError));
+  }
+
+  /* ── Pricing (Phase 10b) ─────────────────────────────────────────────── */
+
+  getPricing(productId: string): Observable<PricingRecommendation> {
+    return this.http
+      .get<PricingRecommendation>(`${this.baseUrl}/api/pricing/${productId}`)
+      .pipe(catchError(this.handleError));
+  }
+
+  getPricingRecommendations(
+    category?: string,
+    page = 1,
+    pageSize = 50,
+  ): Observable<PricingRecommendationsResponse> {
+    let params = new HttpParams()
+      .set('page', page.toString())
+      .set('page_size', pageSize.toString());
+    if (category) {
+      params = params.set('category', category);
+    }
+    return this.http
+      .get<PricingRecommendationsResponse>(`${this.baseUrl}/api/pricing/recommendations`, {
+        params,
+      })
+      .pipe(catchError(this.handleError));
+  }
+
+  /* ── Explanations (Phase 10b) ─────────────────────────────────────────── */
+
+  getPricingExplanation(productId: string): Observable<ExplanationResponse> {
+    return this.http
+      .get<ExplanationResponse>(`${this.baseUrl}/api/pricing/${productId}/explanation`)
+      .pipe(catchError(this.handleError));
+  }
+
+  getSegmentExplanation(segmentLabel: SegmentLabel): Observable<ExplanationResponse> {
+    return this.http
+      .get<ExplanationResponse>(`${this.baseUrl}/api/segments/${segmentLabel}/explanation`)
       .pipe(catchError(this.handleError));
   }
 

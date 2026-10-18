@@ -25,7 +25,6 @@ import {
   DestroyRef,
 } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { FormsModule } from '@angular/forms';
 import { ChartConfiguration, ScriptableContext, ChartDataset } from 'chart.js';
 
 import { ApiService } from '../../core/api.service';
@@ -36,11 +35,13 @@ import type {
   Product,
 } from '../../core/models/api.models';
 import { CardComponent } from '../../shared/components/card.component';
+import { CategoryChipsComponent } from '../../shared/components/category-chips.component';
 import { ChartWrapperComponent } from '../../shared/components/chart-wrapper.component';
 import { EmptyStateComponent } from '../../shared/components/empty-state.component';
 import { ErrorStateComponent } from '../../shared/components/error-state.component';
 import { LoadingStateComponent } from '../../shared/components/loading-state.component';
 import { PageHeaderComponent } from '../../shared/components/page-header.component';
+import { ProductSelectComponent } from '../../shared/components/product-select.component';
 import { StatTileComponent } from '../../shared/components/stat-tile.component';
 
 const CATEGORIES = ['All', 'Staples', 'Personal Care', 'Electronics', 'Clothing', 'Impulse'];
@@ -49,9 +50,10 @@ const CATEGORIES = ['All', 'Staples', 'Personal Care', 'Electronics', 'Clothing'
   selector: 'app-forecast',
   standalone: true,
   imports: [
-    FormsModule,
     PageHeaderComponent,
     CardComponent,
+    CategoryChipsComponent,
+    ProductSelectComponent,
     StatTileComponent,
     ChartWrapperComponent,
     LoadingStateComponent,
@@ -72,16 +74,13 @@ export class ForecastComponent implements OnInit {
 
   selectedCategory = signal<string>('All');
   selectedProductId = signal<string>('');
-  productSearch = signal<string>('');
 
   readonly categories = CATEGORIES;
 
   filteredProducts = computed(() => {
     let list = this.products();
     const cat = this.selectedCategory();
-    const q = this.productSearch().toLowerCase();
     if (cat !== 'All') list = list.filter((p) => p.category === cat);
-    if (q) list = list.filter((p) => p.product_id.toLowerCase().includes(q));
     return list;
   });
 

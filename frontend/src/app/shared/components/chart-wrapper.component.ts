@@ -95,7 +95,13 @@ export class ChartWrapperComponent implements AfterViewInit, OnDestroy {
       return;
     }
 
-    const ctx = this.canvasRef.nativeElement.getContext('2d');
+    let ctx: CanvasRenderingContext2D | null = null;
+    try {
+      ctx = this.canvasRef.nativeElement.getContext('2d');
+    } catch {
+      // SSR / domino environment does not implement canvas getContext
+      return;
+    }
     if (!ctx) {
       return;
     }

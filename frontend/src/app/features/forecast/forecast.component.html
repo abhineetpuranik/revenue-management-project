@@ -8,56 +8,21 @@
   <!-- ── Left sidebar: category chips + product list ─────────────────── -->
   <aside class="forecast-sidebar">
     <app-card caption="CATEGORY">
-      <div class="category-chips">
-        @for (cat of categories; track cat) {
-          <button
-            type="button"
-            class="chip mono"
-            [class.chip--active]="selectedCategory() === cat"
-            (click)="selectCategory(cat)"
-          >
-            {{ cat }}
-          </button>
-        }
-      </div>
-    </app-card>
-
-    <app-card caption="PRODUCT">
-      <input
-        type="search"
-        class="product-search mono"
-        placeholder="Search P001…"
-        [value]="productSearch()"
-        (input)="productSearch.set($any($event.target).value)"
-        aria-label="Search products"
+      <app-category-chips
+        [categories]="categories"
+        [selected]="selectedCategory()"
+        (select)="selectCategory($event)"
       />
-
-      @if (productsLoading()) {
-        <app-loading-state message="Loading products…" />
-      } @else if (productsError()) {
-        <app-error-state [message]="productsError()!" (retry)="retryProducts()" />
-      } @else if (filteredProducts().length === 0) {
-        <app-empty-state message="No products match." />
-      } @else {
-        <ul class="product-list" role="listbox" aria-label="Products">
-          @for (product of filteredProducts(); track product.product_id) {
-            <li
-              role="option"
-              class="product-item mono"
-              [class.product-item--selected]="selectedProductId() === product.product_id"
-              [attr.aria-selected]="selectedProductId() === product.product_id"
-              (click)="selectProduct(product.product_id)"
-              (keydown.enter)="selectProduct(product.product_id)"
-              (keydown.space)="selectProduct(product.product_id)"
-              [tabindex]="0"
-            >
-              <span class="product-item__id">{{ product.product_id }}</span>
-              <span class="product-item__price">£{{ formatNum(product.base_price) }}</span>
-            </li>
-          }
-        </ul>
-      }
     </app-card>
+
+    <app-product-select
+      [products]="filteredProducts()"
+      [loading]="productsLoading()"
+      [error]="productsError()"
+      [selectedProductId]="selectedProductId()"
+      (select)="selectProduct($event)"
+      (retry)="retryProducts()"
+    />
   </aside>
 
   <!-- ── Right main area ─────────────────────────────────────────────── -->

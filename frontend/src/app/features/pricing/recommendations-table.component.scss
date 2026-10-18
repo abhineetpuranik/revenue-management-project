@@ -1,0 +1,124 @@
+.table-scroll {
+  overflow-x: auto;
+}
+
+.data-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--font-size-small);
+
+  th {
+    text-align: left;
+    padding: var(--spacing-sm) var(--spacing-md);
+    border-bottom: var(--border-width) solid var(--color-ink);
+    background: var(--color-ink);
+    color: var(--color-lime);
+    text-transform: uppercase;
+    letter-spacing: var(--letter-spacing-wide);
+    white-space: nowrap;
+  }
+
+  td {
+    padding: var(--spacing-sm) var(--spacing-md);
+    border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+  }
+
+  tr:last-child td {
+    border-bottom: none;
+  }
+}
+
+.rec-row {
+  cursor: pointer;
+  transition: background var(--transition-fast);
+
+  &:hover td {
+    background: rgba(198, 242, 78, 0.15);
+  }
+
+  &:focus-visible {
+    outline: var(--border-width) solid var(--color-purple);
+    outline-offset: -3px;
+  }
+}
+
+.rec-row--selected td {
+  background: rgba(198, 242, 78, 0.25);
+}
+
+.rec-row__id {
+  font-weight: var(--font-weight-bold);
+}
+
+.cell--number {
+  text-align: right;
+}
+
+.cell--positive {
+  color: var(--color-teal);
+  font-weight: var(--font-weight-bold);
+}
+
+.cell--negative {
+  color: var(--color-coral);
+  font-weight: var(--font-weight-bold);
+}
+
+.avail-badge {
+  display: inline-block;
+  padding: 2px var(--spacing-sm);
+  border: 2px solid var(--color-ink);
+  border-radius: var(--border-radius);
+  font-size: var(--font-size-micro);
+  text-transform: uppercase;
+  letter-spacing: var(--letter-spacing-wide);
+  font-weight: var(--font-weight-bold);
+}
+
+.avail-badge--available {
+  background: var(--color-lime);
+  color: var(--color-ink);
+}
+
+.avail-badge--none {
+  background: rgba(0, 0, 0, 0.06);
+  opacity: 0.6;
+}
+
+.pagination {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  margin-top: var(--spacing-md);
+  flex-wrap: wrap;
+  font-size: var(--font-size-small);
+}
+
+.pagination-info {
+  flex: 1;
+  opacity: 0.6;
+}
+
+.pagination-btn {
+  padding: 4px var(--spacing-md);
+  border: var(--border-width) solid var(--color-ink);
+  border-radius: var(--border-radius);
+  background: white;
+  font-family: var(--font-mono);
+  font-size: var(--font-size-small);
+  font-weight: var(--font-weight-bold);
+  cursor: pointer;
+  box-shadow: var(--shadow-base);
+  transition: all var(--transition-fast);
+}
+
+.pagination-btn:hover:not(:disabled) {
+  transform: translate(-2px, -2px);
+  box-shadow: var(--shadow-hover);
+}
+
+.pagination-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+  box-shadow: none;
+}

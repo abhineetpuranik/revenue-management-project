@@ -1,0 +1,72 @@
+<app-page-header
+  label="[ 03 / PRICING ]"
+  title="Pricing Recommendations"
+  description="XGBoost-elasticity price optimiser with LLM-generated explanations"
+/>
+
+<div class="pricing-layout">
+  <!-- ── Left sidebar: category chips + product list ─────────────────── -->
+  <aside class="pricing-sidebar">
+    <app-card caption="CATEGORY">
+      <app-category-chips
+        [categories]="categories"
+        [selected]="selectedCategory()"
+        (select)="selectCategory($event)"
+      />
+    </app-card>
+
+    <app-product-select
+      [products]="filteredProducts()"
+      [loading]="productsLoading()"
+      [error]="productsError()"
+      [selectedProductId]="selectedProductId()"
+      (select)="selectProduct($event)"
+      (retry)="retryProducts()"
+    />
+  </aside>
+
+  <!-- ── Right main area ─────────────────────────────────────────────── -->
+  <div class="pricing-main">
+
+    <!-- ── Recommendation card (numbers first) ───────────────────────── -->
+    <section id="pricing-detail" tabindex="-1">
+      @if (recLoading()) {
+        <app-card caption="RECOMMENDATION">
+          <app-loading-state message="Loading recommendation…" />
+        </app-card>
+      } @else if (recError()) {
+        <app-card caption="RECOMMENDATION">
+          <app-error-state [message]="recError()!" (retry)="retryRecommendation()" />
+        </app-card>
+      } @else if (recommendation()) {
+        <app-recommendation-card [recommendation]="recommendation()" />
+      } @else {
+        <app-card caption="RECOMMENDATION">
+          <app-error-state message="Select a product to view its pricing recommendation." [showRetry]="false" />
+        </app-card>
+      }
+    </section>
+
+    <!-- ── Explanation panel (fetched separately, after numbers) ────── -->
+    <app-explanation-panel
+      [state]="explanationState()"
+      [text]="explanationText()"
+      [reason]="explanationReason()"
+      [source]="explanationSourceTyped()"
+      [generatedAt]="explanationGeneratedAt()"
+      (retry)="retryExplanation()"
+    />
+
+    <!-- ── Recommendations overview table (paginated, category-filtered) ─ -->
+    <app-recommendations-table
+      [data]="tableData()"
+      [loading]="tableLoading()"
+      [error]="tableError()"
+      [selectedProductId]="selectedProductId()"
+      (selectProduct)="selectProductFromTable($event)"
+      (goToPage)="goToTablePage($event)"
+      (retry)="retryTable()"
+    />
+
+  </div>
+</div>

@@ -24,9 +24,9 @@ The app redirects `/` → `/forecast` on load.
 
 | Route | Status | Description |
 |---|---|---|
-| `/forecast` | ✅ Live | Product selector, category chips, Chart.js line chart (history + test window), MAPE/RMSE/MAE tiles, model comparison table, weekly data table |
-| `/segments` | ✅ Live | Stat tiles (customers, k, silhouette), segment summary table with inline bar charts, doughnut chart, customer lookup (single record), paginated customer table with segment filter |
-| `/pricing` | 🔜 Phase 11b | Placeholder showing Phase 8 summary stats. Wiring to `/api/pricing` endpoints comes in Phase 11b |
+| `/forecast` | ✅ Live | Product sidebar (shared components), category chips, Chart.js line chart (history + test window), MAPE/RMSE/MAE tiles, model comparison table, weekly data table |
+| `/segments` | ✅ Live | Stat tiles (customers / k / silhouette), segment summary table with bar charts, revenue doughnut, customer lookup, paginated customer table with segment filter |
+| `/pricing` | ✅ Live | Product sidebar, category chips, recommendation card with bar chart + direction tag + revenue tiles, explanation panel with source badge, paginated recommendations table with row-click selection |
 
 ---
 
@@ -36,10 +36,10 @@ The app redirects `/` → `/forecast` on load.
 |---|---|---|
 | Angular | 21 | Framework — standalone components, signals |
 | TypeScript | 5.9 | Strict mode |
-| Chart.js | 4.5 | Line chart + doughnut chart |
+| Chart.js | 4.5 | Line chart (forecast), bar chart (pricing), doughnut (segments) |
 | Space Grotesk | 700 | Heading font |
 | Space Mono | 400 | Body / mono font |
-| Vitest | 4 | Unit tests (via `@angular/build:unit-test`) |
+| Vitest | 4 | Unit tests (76 tests across 10 spec files) |
 
 ---
 
@@ -52,12 +52,13 @@ src/
 │   ├── app.routes.ts                    Lazy-loaded routes
 │   ├── app.config.ts                    provideRouter + provideHttpClient(withFetch)
 │   ├── core/
-│   │   ├── api.service.ts               Typed HTTP client for all Phase 10a endpoints
+│   │   ├── api.service.ts               Typed HTTP client for all Phase 10a + 10b endpoints
 │   │   ├── header.component.ts          Sticky header: nav + health badge (polls /api/health every 30s)
 │   │   ├── models/
-│   │   │   └── api.models.ts            TypeScript interfaces mirroring docs/api.md
+│   │   │   └── api.models.ts            TypeScript interfaces (forecast, segments, pricing, explanations)
 │   │   └── tests/
-│   │       └── api.service.spec.ts      10 unit tests via HttpTestingController
+│   │       ├── api.service.spec.ts      10 tests (Phase 10a endpoints)
+│   │       └── api-pricing.service.spec.ts  6 tests (Phase 10b endpoints)
 │   ├── shared/
 │   │   ├── segment-color.ts             getSegmentColor() pure helper
 │   │   ├── components/
@@ -65,18 +66,25 @@ src/
 │   │   │   ├── card.component.ts
 │   │   │   ├── stat-tile.component.ts
 │   │   │   ├── tag.component.ts
+│   │   │   ├── category-chips.component.ts   Shared category filter (Forecast + Pricing)
+│   │   │   ├── product-select.component.ts   Shared product sidebar (Forecast + Pricing)
+│   │   │   ├── explanation-panel.component.ts Reusable LLM explanation display (4 states)
 │   │   │   ├── loading-state.component.ts
 │   │   │   ├── error-state.component.ts
 │   │   │   ├── empty-state.component.ts
-│   │   │   └── chart-wrapper.component.ts  Chart.js lifecycle manager
+│   │   │   └── chart-wrapper.component.ts    Chart.js lifecycle manager
 │   │   └── tests/
 │   │       ├── segment-color.spec.ts    7 tests
 │   │       ├── loading-state.spec.ts    8 tests (covers loading / error / empty)
-│   │       └── stat-tile.spec.ts        4 tests
+│   │       ├── stat-tile.spec.ts        4 tests
+│   │       └── explanation-panel.spec.ts  11 tests (4 states + plain-text rendering)
 │   └── features/
-│       ├── forecast/                    Forecast view (3 files)
-│       ├── segments/                    Segmentation view (3 files)
-│       └── pricing/                     Pricing placeholder (1 file)
+│       ├── forecast/                    Forecast view (uses shared category/product)
+│       ├── segments/                    Segmentation view
+│       └── pricing/                     Pricing view
+│           ├── pricing.component.*       Orchestrator (stale guard + explanation timeout)
+│           ├── recommendation-card.*     Single product recommendation
+│           └── recommendations-table.*   Paginated overview table
 ├── environments/
 │   ├── environment.ts                   dev: apiBaseUrl = http://localhost:5000
 │   └── environment.prod.ts
@@ -90,7 +98,7 @@ src/
 
 ```bash
 npm test
-# → 34 tests across 5 spec files, all passing
+# → 76 tests across 10 spec files, all passing
 ```
 
 ---
@@ -113,9 +121,12 @@ All visual tokens are CSS custom properties defined in `src/styles/tokens.scss`.
 
 ---
 
-## Phase 11b TODO
+## Phase 12 TODO
 
-- Wire `/api/pricing/<product_id>` and `/api/pricing/recommendations` to PricingComponent
-- Display LLM explanation cards from `/api/pricing/<product_id>/explanation`
-- Display segment explanation from `/api/segments/<label>/explanation`
-- Add forecast explanation handling (always returns `explanation_available: false`)
+- Add segment explanation cards to the Segments view using the existing
+  `ExplanationPanelComponent` and `ApiService.getSegmentExplanation()` (both
+  are ready, just need to wire them in the Segments component).
+- Wire forecast explanation handling — `GET /api/forecast/<id>/explanation`
+  always returns `explanation_available: false`, so it can be a silent no-op
+  or a small "not available" note.
+- End-to-end integration testing with real backend + MySQL.
