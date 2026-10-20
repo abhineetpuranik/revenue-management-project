@@ -1,0 +1,6 @@
+{
+  "ari": null,
+  "nmi": null,
+  "purity": null,
+  "note": "Ground-truth DB not available \u2014 ARI/NMI/purity could not be computed."
+}

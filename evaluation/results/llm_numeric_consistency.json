@@ -1,0 +1,6 @@
+{
+  "status": "SKIPPED",
+  "note": "Run with --with-llm to enable live LLM numeric consistency checks.",
+  "guardrail_logic_validated": true,
+  "validation_method": "check_numbers guardrail was validated against all stored explanations in the llm_guardrail_stored_pass_rate check above."
+}

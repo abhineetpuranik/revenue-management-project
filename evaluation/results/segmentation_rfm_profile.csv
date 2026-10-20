@@ -1,0 +1,5 @@
+segment_label,n_customers,mean_recency,mean_frequency,mean_monetary
+at_risk,201,3.6,225.59,4339.79
+high_value,160,1.02,1037.05,58087.23
+occasional,293,2.22,452.46,10136.98
+regular,346,1.16,851.7,29086.92

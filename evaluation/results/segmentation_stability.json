@@ -1,0 +1,64 @@
+{
+  "seeds_tested": [
+    0,
+    1,
+    2,
+    42,
+    99
+  ],
+  "pairwise_ari": [
+    {
+      "seed_a": 0,
+      "seed_b": 1,
+      "ari": 1.0
+    },
+    {
+      "seed_a": 0,
+      "seed_b": 2,
+      "ari": 1.0
+    },
+    {
+      "seed_a": 0,
+      "seed_b": 42,
+      "ari": 1.0
+    },
+    {
+      "seed_a": 0,
+      "seed_b": 99,
+      "ari": 1.0
+    },
+    {
+      "seed_a": 1,
+      "seed_b": 2,
+      "ari": 1.0
+    },
+    {
+      "seed_a": 1,
+      "seed_b": 42,
+      "ari": 1.0
+    },
+    {
+      "seed_a": 1,
+      "seed_b": 99,
+      "ari": 1.0
+    },
+    {
+      "seed_a": 2,
+      "seed_b": 42,
+      "ari": 1.0
+    },
+    {
+      "seed_a": 2,
+      "seed_b": 99,
+      "ari": 1.0
+    },
+    {
+      "seed_a": 42,
+      "seed_b": 99,
+      "ari": 1.0
+    }
+  ],
+  "min_ari": 1.0,
+  "mean_ari": 1.0,
+  "note": "ARI=1.0 means two seeds produce identical cluster assignments (after label permutation).  Lower ARI indicates instability.  All runs are in-memory \u2014 stored pipeline outputs are never modified."
+}

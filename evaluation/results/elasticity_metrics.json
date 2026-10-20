@@ -1,0 +1,11 @@
+{
+  "n_products": 50,
+  "mae": null,
+  "rmse": null,
+  "pearson": null,
+  "spearman": null,
+  "sign_agreement": null,
+  "share_estimates_negative": 1.0,
+  "mean_estimated_elasticity": -1.3562,
+  "note": "GT DB not available \u2014 comparison metrics could not be computed."
+}

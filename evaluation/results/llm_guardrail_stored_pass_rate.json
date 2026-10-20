@@ -1,0 +1,9 @@
+{
+  "n_stored_explanations": 0,
+  "n_pass": 0,
+  "n_fail": 0,
+  "pass_rate": null,
+  "fail_examples": [],
+  "result": "SKIP",
+  "note": "DB not available \u2014 stored explanation check skipped."
+}

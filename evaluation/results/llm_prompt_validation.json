@@ -1,0 +1,17 @@
+{
+  "pricing": {
+    "prompt_is_string": true,
+    "payload_json_in_prompt": true,
+    "system_prompt_non_empty": true,
+    "prompt_length": 708,
+    "result": "PASS"
+  },
+  "segment": {
+    "prompt_is_string": true,
+    "payload_json_in_prompt": true,
+    "system_prompt_non_empty": true,
+    "prompt_length": 398,
+    "result": "PASS"
+  },
+  "overall": "PASS"
+}

@@ -1,0 +1,26 @@
+{
+  "scenarios": {
+    "double_api_error": {
+      "source": "fallback",
+      "has_api_error_in_reason": true,
+      "result": "PASS"
+    },
+    "single_timeout": {
+      "source": "fallback",
+      "result": "PASS",
+      "note": "Single timeout: retried or fell back \u2014 no crash."
+    },
+    "missing_action_graceful": {
+      "check_direction_ok": true,
+      "rejection_reason": null,
+      "result": "PASS",
+      "note": "check_direction returns (True, None) when action key is absent."
+    },
+    "mock_client_no_crash": {
+      "source": "llm",
+      "explanation_non_empty": true,
+      "result": "PASS"
+    }
+  },
+  "overall": "PASS"
+}

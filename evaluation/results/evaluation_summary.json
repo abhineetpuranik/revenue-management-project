@@ -1,0 +1,41 @@
+{
+  "timestamp": "2026-10-20T22:49:37.335693",
+  "areas_run": [
+    "system_performance"
+  ],
+  "with_llm": false,
+  "with_gt_sim": false,
+  "results": [
+    {
+      "area": "system_performance",
+      "status": "FAIL",
+      "elapsed_seconds": 1.03,
+      "error": "XGBoostError: \nXGBoost Library (libxgboost.dylib) could not be loaded.\nLikely causes:\n  * OpenMP runtime is not installed\n    - vcomp140.dll or libgomp-1.dll for Windows\n    - libomp.dylib for Mac OSX\n    - libgomp.so for Linux and other UNIX-like OSes\n    Mac OSX users: Run `brew install libomp` to install OpenMP runtime.\n\n  * You are running 32-bit Python on a 64-bit OS\n\nError message(s): [\"dlopen(/Users/kanishkbagzai/Library/Python/3.13/lib/python/site-packages/xgboost/lib/libxgboost.dylib, 0x0006): Library not loaded: @rpath/libomp.dylib\\n  Referenced from: <09B43001-8527-34F6-AAE4-B97DA8A6CBC0> /Users/kanishkbagzai/Library/Python/3.13/lib/python/site-packages/xgboost/lib/libxgboost.dylib\\n  Reason: tried: '/opt/homebrew/opt/libomp/lib/libomp.dylib' (no such file), '/System/Volumes/Preboot/Cryptexes/OS/opt/homebrew/opt/libomp/lib/libomp.dylib' (no such file), '/opt/homebrew/opt/libomp/lib/libomp.dylib' (no such file), '/System/Volumes/Preboot/Cryptexes/OS/opt/homebrew/opt/libomp/lib/libomp.dylib' (no such file)\"]\n"
+    }
+  ],
+  "total_pass": 0,
+  "total_fail": 1,
+  "output_files": [
+    "results/elasticity_by_category.csv",
+    "results/elasticity_metrics.json",
+    "results/elasticity_scatter.png",
+    "results/elasticity_worst_estimates.csv",
+    "results/evaluation_summary.json",
+    "results/llm_failure_handling.json",
+    "results/llm_guardrail_stored_pass_rate.json",
+    "results/llm_numeric_consistency.json",
+    "results/llm_prompt_validation.json",
+    "results/pricing_constraint_compliance.json",
+    "results/pricing_determinism_check.json",
+    "results/pricing_direction_distribution.json",
+    "results/pricing_elasticity_direction_correlation.json",
+    "results/pricing_elasticity_vs_change.png",
+    "results/segmentation_confusion_matrix.csv",
+    "results/segmentation_confusion_matrix.png",
+    "results/segmentation_elbow_silhouette.png",
+    "results/segmentation_k_search.csv",
+    "results/segmentation_rfm_profile.csv",
+    "results/segmentation_stability.json",
+    "results/segmentation_vs_ground_truth.json"
+  ]
+}
