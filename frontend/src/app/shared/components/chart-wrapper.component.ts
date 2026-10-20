@@ -1,7 +1,10 @@
 /**
  * Chart wrapper component — generic Chart.js container.
  * Manages chart creation, update, and destruction to prevent memory leaks.
- * Registers only the Chart.js components actually needed.
+ *
+ * Key design: the effect() owns the full chart lifecycle. It destroys and
+ * recreates the chart every time the config signal changes, which correctly
+ * handles the case where the config arrives before AND after ngAfterViewInit.
  */
 
 import {
@@ -14,22 +17,22 @@ import {
   input,
 } from '@angular/core';
 import {
+  ArcElement,
+  BarElement,
+  CategoryScale,
   Chart,
   ChartConfiguration,
   ChartType,
-  CategoryScale,
+  Filler,
+  Legend,
   LinearScale,
-  PointElement,
   LineElement,
-  BarElement,
-  ArcElement,
+  PointElement,
   Title,
   Tooltip,
-  Legend,
-  Filler,
 } from 'chart.js';
 
-// Register Chart.js components used across the app
+// Register all Chart.js components used across the app (called once at import time)
 Chart.register(
   CategoryScale,
   LinearScale,
@@ -40,7 +43,7 @@ Chart.register(
   Title,
   Tooltip,
   Legend,
-  Filler
+  Filler,
 );
 
 @Component({
@@ -55,80 +58,79 @@ Chart.register(
     .chart-wrapper {
       position: relative;
       width: 100%;
-      min-height: 300px;
+      height: 100%;
+      min-height: 260px;
     }
 
     canvas {
-      max-width: 100%;
+      display: block;
     }
   `,
 })
 export class ChartWrapperComponent implements AfterViewInit, OnDestroy {
-  @ViewChild('chartCanvas', { static: true }) canvasRef!: ElementRef<HTMLCanvasElement>;
+  @ViewChild('chartCanvas', { static: true })
+  canvasRef!: ElementRef<HTMLCanvasElement>;
 
   config = input.required<ChartConfiguration>();
+
   private chart: Chart | null = null;
+  private ready = false;   // true once ngAfterViewInit has run
 
   constructor() {
-    // React to config changes and update the chart
+    // Runs every time config() changes. On first load this fires during
+    // construction (before ngAfterViewInit), so we defer via setTimeout(0).
+    // On subsequent changes (product switch, etc.) ngAfterViewInit has
+    // already run and ready=true, so we recreate immediately.
     effect(() => {
-      const newConfig = this.config();
-      if (this.chart) {
-        // Update existing chart
-        this.chart.data = newConfig.data;
-        this.chart.options = newConfig.options ?? {};
-        this.chart.update();
+      const cfg = this.config();   // subscribe to signal
+      if (!this.ready) {
+        // Canvas not in DOM yet — defer until after ngAfterViewInit
+        setTimeout(() => this.buildChart(cfg), 0);
+      } else {
+        this.buildChart(cfg);
       }
     });
   }
 
   ngAfterViewInit(): void {
-    this.createChart();
+    this.ready = true;
+    // Build now in case the effect already fired but was deferred
+    this.buildChart(this.config());
   }
 
   ngOnDestroy(): void {
     this.destroyChart();
   }
 
-  private createChart(): void {
-    if (!this.canvasRef) {
+  private buildChart(cfg: ChartConfiguration): void {
+    // Skip if there is no data worth drawing
+    if (!cfg.data?.datasets?.length) {
       return;
     }
 
     let ctx: CanvasRenderingContext2D | null = null;
     try {
-      ctx = this.canvasRef.nativeElement.getContext('2d');
+      ctx = this.canvasRef?.nativeElement?.getContext('2d') ?? null;
     } catch {
-      // SSR / domino environment does not implement canvas getContext
-      return;
+      return; // SSR / jsdom — canvas not implemented
     }
-    if (!ctx) {
-      return;
-    }
+    if (!ctx) return;
 
-    const config = this.config();
-
-    // Graceful handling of empty data
-    if (!config.data || !config.data.datasets || config.data.datasets.length === 0) {
-      console.warn('ChartWrapper: No datasets provided, chart will not render');
-      return;
-    }
+    // Destroy the previous instance before creating a new one
+    this.destroyChart();
 
     try {
       this.chart = new Chart(ctx, {
-        type: config.type as ChartType,
-        data: config.data,
+        type: cfg.type as ChartType,
+        data: cfg.data,
         options: {
           responsive: true,
           maintainAspectRatio: false,
-          ...(config.options ?? {}),
-          font: {
-            family: "'Space Mono', monospace",
-          },
+          ...(cfg.options ?? {}),
         },
       });
-    } catch (error) {
-      console.error('ChartWrapper: Failed to create chart', error);
+    } catch (err) {
+      console.error('ChartWrapper: failed to create chart', err);
     }
   }
 

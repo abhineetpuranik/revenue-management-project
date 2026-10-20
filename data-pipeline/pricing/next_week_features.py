@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import datetime
 import logging
 import math
 
@@ -21,7 +22,7 @@ def _calendar_for_week(cal: pd.DataFrame, week_start: pd.Timestamp) -> pd.DataFr
     cal_idx = cal.set_index("date")
     rows = []
     for i in range(7):
-        d = week_start + pd.Timedelta(days=i)
+        d = week_start + datetime.timedelta(days=i)
         src = d
         if d not in cal_idx.index:
             try:

@@ -142,7 +142,8 @@
 /* ── Chart area ─────────────────────────────────────────────────────────── */
 
 .chart-area {
-  min-height: 220px;
+  height: 220px;
+  position: relative;
   margin-bottom: var(--spacing-md);
 }
 

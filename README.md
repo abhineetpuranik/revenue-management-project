@@ -1,41 +1,209 @@
 # AI-Powered Demand Forecasting and Dynamic Pricing
 
-A final-year undergraduate project that helps retail businesses forecast weekly product demand and automatically recommend prices to maximise revenue. A Flask API serves the results, and an Angular dashboard displays them with short LLM-generated explanations.
+A final-year undergraduate project that forecasts weekly product demand, segments customers by behaviour, and recommends revenue-maximising prices — all explained in plain English by an LLM. A Flask REST API serves the results; an Angular dashboard displays them.
+
+```
+50 products  •  1 000 customers  •  3 years of daily sales  •  ~1.3 M transaction rows
+XGBoost MAPE 9.7%  •  Segmentation ARI 1.0  •  Revenue uplift +7.9%
+```
 
 ---
 
-## What the system does
+## Architecture (text diagram)
 
-1. **Generates a synthetic retail dataset** — 50 products, 1 000 customers, 3 years of daily sales (≈ 1.3 million transaction rows). A synthetic dataset is used because public retail datasets do not have controlled price changes or verified ground-truth answers. The generator embeds a known true elasticity per product and a known true segment per customer in a separate, sealed database schema (`revenue_management_gt`). The ML models never read this schema; it is only used to measure how accurate the results are.
-
-2. **Cleans and loads the data** — an ETL pipeline checks for duplicates, missing values and referential integrity, then loads everything into MySQL.
-
-3. **Builds a weekly feature table** — aggregates daily sales to one row per product per ISO week, adds 3-week demand lags, calendar signals (month, seasonality, festival flags) and price features. Lag features are strictly backward-looking — no future data leaks in.
-
-4. **Forecasts weekly demand** — trains a Linear Regression baseline and an XGBoost model, picks the winner by test-set RMSE, and saves it to disk. The saved model is the single source of truth for demand predictions everywhere else in the system.
-
-5. **Estimates price elasticity per product** — a log-log OLS regression (`log units = a + b·log price + controls`) gives a per-product elasticity coefficient that describes how sensitive demand is to price changes.
-
-6. **Segments customers** — computes Recency / Frequency / Monetary (RFM) values per customer, clusters with K-Means (k chosen by Silhouette score), and assigns a label (high-value / regular / occasional / at-risk) based on each cluster's actual RFM profile.
-
-7. **Recommends prices** — for each product, sweeps a grid of candidate prices (±15% in 1% steps), predicts demand at each using the XGBoost model scaled by elasticity, filters out candidates that break the margin, max-change, or price-range rules, and picks the one with the highest expected revenue.
-
-8. **Generates natural-language explanations** — passes the structured pricing and segmentation results to an LLM (Gemini, or a mock for testing). The LLM can only use numbers it is given; any output containing a new number is rejected and replaced with a template sentence.
+```
+Synthetic dataset        ETL             Feature           Forecasting
+generator          →  clean +   →   engineering    →   LR baseline +
+(data_generation/)    load MySQL    (features/)         XGBoost  (models/)
+                        ↓                                     ↓
+                   MySQL                             model artifact
+                   revenue_management         (models/artifacts/)
+                        ↓                                     ↓
+               Elasticity ←→ Segmentation ←→ Pricing ←→ Explanations
+               (pricing/)    (segmentation/)  (pricing/) (explanations/)
+                        ↓
+                   Flask API  (backend/)
+                        ↓
+                 Angular dashboard  (frontend/)
+```
 
 ---
 
-## Key results (run on the synthetic dataset)
+## Quick start (30 seconds)
 
-| | |
-|---|---|
-| **Demand forecast MAPE (XGBoost)** | 9.7 % |
-| **Elasticity MAE vs. true values** | 0.062 |
-| **Elasticity correct sign** | 100 % of products |
-| **Segmentation accuracy vs. true labels** | 100 % (ARI 1.0) |
-| **Expected weekly revenue uplift from pricing** | +7.9 % |
-| **Pricing decisions matching true-elasticity optimum (direction)** | 48 / 50 products |
+If you have already run the pipeline and have a populated database, or have restored the demo dump:
 
-Full metrics are in [`docs/results.md`](docs/results.md).
+```bash
+# Terminal 1 — start the backend
+cd backend
+python app.py
+# -> http://localhost:5000/api/health  ->  {"status": "ok"}
+
+# Terminal 2 — start the frontend
+cd frontend
+npm install
+npx ng serve
+# -> http://localhost:4200
+```
+
+---
+
+## Full setup from scratch
+
+### Prerequisites
+
+| Tool | Version | Notes |
+|---|---|---|
+| Python | 3.10 – 3.12 | 3.13 not supported (numpy 1.26 incompatibility) |
+| MySQL | 8.0 | Server must be running before loading data |
+| Node.js | 22 LTS | For the Angular frontend |
+| mysqldump | 8.0 | For demo backups (ships with MySQL) |
+
+### Step 1 — Clone and create the database schema
+
+```bash
+git clone <repo-url>
+cd "Revenue Management"
+
+# Create both schemas (drops any existing revenue_management databases)
+mysql -u root -p < database/schema.sql
+```
+
+### Step 2 — Data-pipeline environment
+
+```bash
+cd data-pipeline
+
+# Create and activate a virtual environment
+python -m venv venv
+
+# Windows
+.\venv\Scripts\Activate.ps1
+# macOS / Linux
+source venv/bin/activate
+
+pip install -r requirements.txt
+
+# Copy and fill in credentials
+copy .env.example .env     # Windows
+cp .env.example .env       # macOS / Linux
+```
+
+Open `data-pipeline/.env` and set at minimum:
+```
+DB_USER=your_mysql_username
+DB_PASSWORD=your_mysql_password
+```
+
+### Step 3 — Run the pipeline
+
+From `data-pipeline/` with the venv active, either use the runner:
+
+```bash
+cd ..
+python scripts/run_pipeline.py           # all 11 stages
+python scripts/run_pipeline.py --list    # see what stages exist
+python scripts/run_pipeline.py --from train_model  # resume from a stage
+```
+
+Or run stages manually (all commands from `data-pipeline/`):
+
+```bash
+python -m data_generation.generate_base_tables
+python -m data_generation.generate_transactional_tables   # ~2 minutes
+python -m etl.clean_tables
+python -m etl.load_to_mysql
+python -m features.build_feature_table
+python -m models.train_forecasting_models
+python -m pricing.estimate_elasticity
+python -m segmentation.run_segmentation
+python -m pricing.build_candidates
+python -m pricing.run_pricing
+python -m explanations.generate_explanations
+```
+
+**Total time (approximate):** ~8–12 minutes on a modern laptop.  
+Every stage is deterministic — running the pipeline twice produces identical output.
+
+### Step 4 — Backend environment
+
+```bash
+cd backend
+python -m venv venv
+
+.\venv\Scripts\Activate.ps1   # Windows
+source venv/bin/activate       # macOS / Linux
+
+pip install -r requirements.txt
+copy .env.example .env    # Windows
+cp .env.example .env      # macOS / Linux
+```
+
+Fill in the same `DB_USER` and `DB_PASSWORD` as the data pipeline.
+
+Start the backend:
+```bash
+python app.py
+# Confirm: curl http://localhost:5000/api/health  ->  {"status": "ok"}
+```
+
+### Step 5 — Frontend
+
+```bash
+cd frontend
+npm install      # add --legacy-peer-deps if npm < 11
+npx ng serve
+# Open: http://localhost:4200
+```
+
+---
+
+## Demo from a dump (fastest)
+
+If a teammate has already run the pipeline, you can restore their database directly:
+
+```bash
+# Download revenue_management.sql.gz and revenue_management_gt.sql.gz
+# from shared storage (link in demo/README.md) and place in demo/
+mysql -u root -p < database/schema.sql
+python demo/restore_demo.py
+# Then start the backend and frontend as above
+```
+
+---
+
+## Running the tests
+
+```bash
+# Data-pipeline tests (no MySQL needed)
+cd data-pipeline
+pytest tests/ -v              # 56 tests, ~4 seconds
+
+# Backend tests (no MySQL needed)
+cd backend
+pytest tests/ -v              # 86 tests, ~3 seconds
+
+# Frontend tests
+cd frontend
+npx ng test --watch=false     # 76 tests, ~11 seconds
+
+# Frontend build
+npx ng build --configuration development
+```
+
+---
+
+## Verification script
+
+Run after the pipeline and while the backend is running:
+
+```bash
+python scripts/verify_system.py
+```
+
+Expected output: `PASS=46  FAIL=0  SKIP=0`
+
+If the backend is not running, D/F/G-api/H/I checks are skipped automatically.
 
 ---
 
@@ -43,236 +211,138 @@ Full metrics are in [`docs/results.md`](docs/results.md).
 
 ```
 Revenue Management/
-├── data-pipeline/              Python pipeline (all ML work lives here)
+├── data-pipeline/              Python pipeline (all ML work)
 │   ├── data_generation/        Synthetic dataset generator
 │   ├── etl/                    Cleaning, validation, MySQL loading
 │   ├── features/               Weekly feature table builder
 │   ├── models/                 Demand forecasting (LR + XGBoost)
-│   │   └── artifacts/          Saved production model + metadata.json
+│   │   └── artifacts/          Saved model + metadata.json (committed)
 │   ├── segmentation/           RFM computation + K-Means clustering
 │   ├── pricing/                Elasticity estimation + pricing optimiser
 │   ├── explanations/           LLM explanation layer
 │   ├── tests/                  Unit + integration tests (56 total)
-│   ├── data/                   Generated data and outputs
-│   │   ├── raw/                Raw CSVs from the generator
-│   │   ├── cleaned/            Cleaned CSVs (ETL output)
-│   │   ├── features/           forecast_features.csv
-│   │   ├── elasticity/         product_elasticity.csv
-│   │   ├── segmentation/       customer_segments.csv, plots
-│   │   └── pricing/            pricing_candidates.csv
+│   ├── data/
+│   │   ├── raw/                gitignored — regenerated by pipeline
+│   │   ├── cleaned/            gitignored — regenerated by pipeline
+│   │   ├── features/           forecast_features.csv (committed)
+│   │   ├── elasticity/         product_elasticity.csv (committed)
+│   │   ├── segmentation/       customer_segments.csv, plots (committed)
+│   │   ├── pricing/            pricing_candidates.csv (committed)
+│   │   │                       pricing_recommendation.csv (gitignored)
+│   │   └── explanations/       gitignored — regenerated by Phase 9
 │   └── requirements.txt
-│
-├── backend/                    Flask REST API
-├── frontend/                   Angular + Chart.js dashboard
+├── backend/                    Flask REST API (86 tests)
+├── frontend/                   Angular + Chart.js dashboard (76 tests)
 ├── database/
-│   └── schema.sql              MySQL DDL (run once to create all tables)
+│   └── schema.sql              MySQL DDL (run once to create schemas)
+├── scripts/
+│   ├── run_pipeline.py         Cross-platform pipeline runner
+│   └── verify_system.py        End-to-end read-only verification
+├── demo/
+│   ├── dump_demo.py            Create compressed DB dumps
+│   ├── restore_demo.py         Restore dumps for demo
+│   └── README.md               Demo procedure + shared storage link
 └── docs/
-    └── results.md              Detailed metrics from every phase
+    ├── api.md                  REST API reference
+    ├── frontend.md             Angular architecture and components
+    ├── results.md              Detailed metrics from every phase
+    ├── demo-script.md          10-minute demo walkthrough
+    ├── viva-guide.md           Module-by-module viva preparation
+    ├── traceability.md         SRS requirement traceability matrix
+    └── known-issues.md         Issues found but not fixed in Phase 12
 ```
 
 ---
 
-## Prerequisites
+## Environment variables
 
-| Tool | Version | Notes |
-|---|---|---|
-| Python | 3.10 – 3.12 | 3.13 not supported (numpy 1.26 incompatibility) |
-| MySQL | 8.0 | Server must be running before loading data |
-| Node.js | 22 LTS | For the Angular frontend |
-| Angular CLI | 17+ | `npm install -g @angular/cli` |
+All variables go in `data-pipeline/.env` (pipeline + backend reads it via config.py fallback).  
+A separate `backend/.env` overrides backend-specific settings.
 
----
-
-## First-time setup
-
-### 1. Python environment (data pipeline)
-
-```bash
-cd data-pipeline
-python -m venv venv
-
-# Windows
-.\venv\Scripts\Activate.ps1
-
-# macOS / Linux
-source venv/bin/activate
-
-pip install -r requirements.txt
-```
-
-### 2. Environment variables
-
-Copy the example file and fill in your MySQL credentials:
-
-```bash
-# Windows
-copy .env.example .env
-
-# macOS / Linux
-cp .env.example .env
-```
-
-Open `.env` and set at minimum:
-
-```
-DB_USER=your_mysql_username
-DB_PASSWORD=your_mysql_password
-```
-
-The other defaults (host `localhost`, port `3306`, database name `revenue_management`) are fine for a local install.
-
-**LLM:** the default `LLM_PROVIDER=mock` runs the explanation layer without any API key. To use Gemini, set `LLM_PROVIDER=gemini` and add your key to `LLM_API_KEY`.
-
-### 3. MySQL schema (run once)
-
-This drops and recreates the `revenue_management` and `revenue_management_gt` schemas, so do not run it against a database you want to keep:
-
-```bash
-mysql -u root -p < database/schema.sql
-```
-
-### 4. Flask backend
-
-```bash
-cd backend
-python -m venv venv
-pip install -r requirements.txt
-
-# Windows
-copy .env.example .env
-# macOS / Linux
-cp .env.example .env
-
-python app.py
-# Health check: http://localhost:5000/api/health  →  {"status": "ok"}
-```
-
-### 5. Angular frontend
-
-```bash
-cd frontend
-npm install --legacy-peer-deps   # --legacy-peer-deps needed due to a known npm 10.9.x resolver bug
-ng serve
-# Open: http://localhost:4200
-```
+| Variable | Default | Used by | Purpose |
+|---|---|---|---|
+| `DB_HOST` | `localhost` | pipeline, backend | MySQL host |
+| `DB_PORT` | `3306` | pipeline, backend | MySQL port |
+| `DB_NAME` | `revenue_management` | pipeline, backend | Application database |
+| `DB_GT_NAME` | `revenue_management_gt` | pipeline only | Ground-truth database (evaluation only) |
+| `DB_USER` | — | pipeline, backend | MySQL username (**required**) |
+| `DB_PASSWORD` | — | pipeline, backend | MySQL password (**required**) |
+| `LLM_PROVIDER` | `mock` | pipeline only | `mock` (no key) or `gemini` |
+| `LLM_MODEL` | `gemini-3.5-flash` | pipeline only | Gemini model name |
+| `LLM_API_KEY` | — | pipeline only | Gemini API key (only if `LLM_PROVIDER=gemini`) |
+| `FLASK_DEBUG` | `false` | backend | Flask debug mode |
+| `FLASK_PORT` | `5000` | backend | Flask listening port |
+| `CORS_ORIGINS` | `http://localhost:4200` | backend | Allowed Angular origin(s) |
+| `FORECAST_HISTORY_WEEKS` | `12` | backend | History weeks returned with test predictions |
 
 ---
 
-## Running the full pipeline
+## Key results
 
-All commands are run from inside `data-pipeline/` with the virtual environment active.
+| Metric | Value |
+|---|---|
+| Demand forecast MAPE (XGBoost) | 9.7% |
+| LR baseline MAPE | 15.3% |
+| XGBoost improvement over LR (RMSE) | 12.7% |
+| Elasticity MAE vs. true values | 0.062 |
+| Elasticity correct sign | 100% (50/50 products) |
+| Segmentation accuracy vs. true labels (ARI) | 1.0 |
+| Expected weekly revenue uplift from pricing | +7.9% |
+| Pricing decisions matching true-elasticity direction | 48/50 products |
 
-```bash
-# Step 1  Generate the synthetic dataset (takes a few minutes)
-python -m data_generation.generate_base_tables
-python -m data_generation.generate_transactional_tables
-
-# Step 2  Clean the data and load it into MySQL
-python -m etl.clean_tables
-python -m etl.load_to_mysql
-
-# Step 3  Build the weekly feature table
-python -m features.build_feature_table
-
-# Step 4  Train the demand forecasting models and save the winner
-python -m models.train_forecasting_models
-
-# Step 5  Estimate price elasticity per product
-python -m pricing.estimate_elasticity
-
-# Step 6  Segment customers with RFM + K-Means
-python -m segmentation.run_segmentation
-
-# Step 7  Generate candidate prices and apply constraints
-python -m pricing.build_candidates
-
-# Step 8  Score candidates and produce recommendations
-python -m pricing.run_pricing
-
-# Step 9  Generate natural-language explanations
-python -m explanations.generate_explanations
-```
-
-Every step is deterministic (fixed random seed throughout). Running the pipeline twice produces identical output.
-
----
-
-## Running the tests
-
-The tests do not need MySQL and run in about 5 seconds:
-
-```bash
-cd data-pipeline
-pytest tests/ -v
-```
-
-56 tests covering segmentation, elasticity, pricing constraints, pricing optimiser, and LLM guardrails. All should pass.
-
----
-
-## Environment variables reference
-
-All variables go in `data-pipeline/.env`. The root `.env.example` is a reference copy.
-
-| Variable | Default | Purpose |
-|---|---|---|
-| `DB_HOST` | `localhost` | MySQL host |
-| `DB_PORT` | `3306` | MySQL port |
-| `DB_NAME` | `revenue_management` | Application database |
-| `DB_GT_NAME` | `revenue_management_gt` | Ground-truth database (evaluation only) |
-| `DB_USER` | — | MySQL username (required) |
-| `DB_PASSWORD` | — | MySQL password (required) |
-| `LLM_PROVIDER` | `mock` | `mock` (no key needed) or `gemini` |
-| `LLM_MODEL` | `gemini-3.5-flash` | Gemini model name |
-| `LLM_API_KEY` | — | Gemini API key (only needed if `LLM_PROVIDER=gemini`) |
-| `FLASK_DEBUG` | `false` | Flask debug mode |
-| `FLASK_PORT` | `5000` | Flask port |
+Full metrics per phase are in [`docs/results.md`](docs/results.md).
 
 ---
 
 ## How the ground-truth separation works
 
-The synthetic data generator assigns every product a `true_elasticity` and every customer a `true_segment`. These are stored in the `revenue_management_gt` MySQL schema, which is a completely separate database from the one the application reads.
-
-- The demand forecasting, elasticity estimation, and segmentation models **only connect to `revenue_management`**. They cannot accidentally read ground-truth values.
-- The validation scripts (run at the end of Phases 6, 7, 8) connect to `revenue_management_gt` to measure accuracy. They never feed those values back into the models.
-- The unit tests include an explicit search for any import or reference to `revenue_management_gt` in the modelling code, which will fail if someone accidentally introduces a dependency.
+The generator assigns every product a `true_elasticity` and every customer a `true_segment`. These go into `revenue_management_gt` — a completely separate MySQL schema. The ML models only connect to `revenue_management`. Validation scripts connect to `revenue_management_gt` after training, but never feed those values back into the models. Unit tests (`test_ground_truth_isolation`, `test_pricing_ground_truth_isolation`) enforce this at the code level.
 
 ---
 
-## Design decisions worth knowing
+## Troubleshooting
 
-**Why synthetic data?** Public retail datasets don't vary prices in a controlled way. Without known true elasticities, there's no way to check whether the Phase 7 estimation is actually correct.
+| Problem | Fix |
+|---|---|
+| `ModuleNotFoundError` in pipeline | Confirm the venv is active: `data-pipeline/venv/Scripts/Activate.ps1` |
+| `Access denied for user` (MySQL) | Check `DB_USER` / `DB_PASSWORD` in `data-pipeline/.env` |
+| `Table doesn't exist` | Run `mysql -u root -p < database/schema.sql` first |
+| Backend 404 on every endpoint | Run the full pipeline before starting the backend |
+| `npm install` peer-dependency errors | Add `--legacy-peer-deps` flag |
+| Frontend shows "OFFLINE" health badge | The backend is not running; start with `python app.py` in `backend/` |
+| Explanation panel always shows "unavailable" | Expected if `LLM_PROVIDER=mock`; set to `gemini` and add `LLM_API_KEY` |
+| `verify_system.py` FAIL on check E | Confirm the venv is active when running the script |
 
-**Why is recency dropped from clustering?** Every customer in the 3-year dataset purchased recently (max gap: 23 days). Recency adds noise rather than signal. The code detects this automatically and logs it.
+---
 
-**How does pricing use the demand model?** The XGBoost model predicts baseline demand at the current price. Demand at a candidate price is then scaled using the elasticity estimate: `demand(p) = d0 × (p / p0)^elasticity`. This combines the model's precision with the economic structure of elasticity.
+## Design decisions
 
-**Why is unit cost estimated rather than loaded from data?** There is no cost table in the synthetic dataset. Unit cost is approximated as a fixed fraction of the product's base price, with the fraction set per category in `pricing/pricing_config.py`. All margin calculations use this estimate consistently.
+**Why synthetic data?** Public retail datasets don't vary prices in a controlled way. Without known true elasticities there is no way to verify Phase 7.
 
-**LLM number guardrail** — every number in the LLM's output is checked against the numbers in the input payload. A re-rounded number (e.g. "14%" instead of "13.9%") fails the check. This prevents the LLM from silently introducing inaccurate figures into what a manager reads.
+**Why XGBoost?** Published benchmarks confirm tree-based models outperform neural networks on tabular data at this scale (~7 700 training rows). XGBoost is also interpretable via feature importance.
+
+**Why is recency dropped from clustering?** All customers in the 3-year dataset bought recently (max gap 23 days). Recency is noise, not signal. The code detects this automatically.
+
+**Why does pricing use elasticity scaling rather than XGBoost directly?** XGBoost was trained on narrow historical price ranges. Querying it at prices outside that range is extrapolation with no reliable signal. Elasticity scaling is economically grounded and explicitly designed for this purpose.
+
+**Why can the LLM only explain?** To prevent hallucination. The guardrail checks every number in the output against the input payload. If a new number appears, the output is rejected and replaced with a template.
 
 ---
 
 ## Project phases
 
-| Phase | What it does | Status |
+| Phase | Description | Status |
 |---|---|---|
-| 0 | Repo setup, folder structure, environments | Done |
+| 0 | Repo setup | Done |
 | 1 | Synthetic dataset generation | Done |
-| 2 | ETL — data cleaning and MySQL loading | Done |
-| 4 | Feature engineering (weekly aggregation, lags, calendar, price) | Done |
-| 5 | Demand forecasting (Linear Regression + XGBoost) | Done |
-| 6 | Customer segmentation (RFM + K-Means) | Done |
-| 7 | Price elasticity estimation | Done |
+| 2 | ETL | Done |
+| 4 | Feature engineering | Done |
+| 5 | Demand forecasting | Done |
+| 6 | Customer segmentation | Done |
+| 7 | Price elasticity | Done |
 | 8 | Pricing optimisation | Done |
 | 9 | LLM explanation layer | Done |
-| 10 | Flask REST API | Next |
-| 11 | Angular dashboard | Planned |
-| 12–14 | Integration, testing, final documentation | Planned |
-
----
-
-## Team
-
-Three students. See [`CONTRIBUTING.md`](CONTRIBUTING.md) for the Git branching and pull request workflow.
+| 10 | Flask REST API | Done |
+| 11 | Angular dashboard | Done |
+| 12 | Integration and demo readiness | Done |
+| 13–14 | Evaluation report and final submission | Planned |

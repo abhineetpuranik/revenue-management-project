@@ -30,7 +30,8 @@
 /* ── Chart area ─────────────────────────────────────────────────────────── */
 
 .chart-area {
-  min-height: 320px;
+  height: 320px;
+  position: relative;
 }
 
 .chart-legend-note {

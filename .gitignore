@@ -37,3 +37,7 @@ data-pipeline/data/raw/
 data-pipeline/data/cleaned/
 data-pipeline/data/pricing/pricing_recommendation.csv
 data-pipeline/data/explanations/
+
+# Demo database dumps (too large for GitHub — store on shared drive)
+demo/*.sql.gz
+demo/*.sql
