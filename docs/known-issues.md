@@ -12,6 +12,8 @@ Issues found during Phase 12 integration testing but not fixed (per the phase co
 **What it means:** `TIE_TOLERANCE` is set when two candidate prices yield revenues within `REVENUE_TIE_TOLERANCE = 0.001` of each other and the tie-break rule (smallest move) was applied. The pricing logic is correct; the documentation is incomplete.  
 **Suggested fix:** Add `TIE_TOLERANCE` to the `BindingConstraint` description in `docs/api.md` and to the TypeScript `BindingConstraint` type comment in `frontend/src/app/core/models/api.models.ts`. No code change needed — the frontend already handles it via the `string` fallback type.
 
+**Phase 13 update (FEAT-003):** A regression test now guards the code side of this issue: `backend/tests/test_phase13_api_contract.py::test_binding_constraint_includes_tie_tolerance` asserts that every `binding_constraint` returned by `GET /api/pricing/recommendations?page_size=200` belongs to the known-valid set `{"MAX_CHANGE", "MARGIN", "PRICE_RANGE", "ELASTICITY_UNRELIABLE", "STOCK", "NO_FEASIBLE_PRICE", "TIE_TOLERANCE"}`. The test uses the shared `client` fixture and is marked `@NEEDS_DB` (`pytest.mark.skipif` when `DB_USER`/`DB_PASSWORD` are absent), so it **runs in a full-stack environment** (expected to pass, since `TIE_TOLERANCE` is an accepted value) and **skips in the Phase 13 sandbox** where `data-pipeline/.env` DB credentials are missing. Status: **code-side mitigated by the contract test**; the `api.md` documentation omission itself remains (the doc fix is outside the FEAT-003 docs scope, which covers `evaluation-report.md`, `test-report.md`, `traceability.md`, and this file).
+
 ---
 
 ## KI-02: NumPy `pd.Timedelta` deprecation warning in `next_week_features.py`
@@ -112,3 +114,50 @@ against it, are legitimately allowed.  No model, pricing, segmentation, or
 explanation module reads GT.
 **Suggested fix:** None.  This is documented behaviour.  The allowlist and
 rationale live in `test_phase13_gt_isolation.py`; the test passes.
+
+---
+
+## KI-10: Several evaluation metrics could not be measured (no DB credentials; XGBoost native library missing in sandbox)
+
+**Severity:** Medium (blocks completion of the Phase 13 evaluation report)
+**Evidence:** The Phase 13 evaluation scripts (`/evaluation/`) were executed,
+but the run environment did not provide the data sources several scripts need:
+
+- `data-pipeline/.env` is absent, so the scripts could not connect to either
+  the application database (`revenue_management`) or the ground-truth database
+  (`revenue_management_gt`). Every DB-dependent result file records
+  `"note": "DB not available"` / `"GT DB not available"` and stores `null`/`SKIP`
+  for its metrics. Affected outputs: `segmentation_vs_ground_truth.json`
+  (ARI/NMI/purity = null), `segmentation_confusion_matrix.csv`,
+  `elasticity_metrics.json` (MAE/RMSE/Pearson/Spearman/sign_agreement = null),
+  `elasticity_by_category.csv`, `elasticity_worst_estimates.csv`,
+  `pricing_constraint_compliance.json` (violation_count = null),
+  `pricing_direction_distribution.json`, `pricing_elasticity_direction_correlation.json`,
+  `pricing_determinism_check.json` (result = SKIP),
+  `llm_guardrail_stored_pass_rate.json` (result = SKIP).
+- The XGBoost native library could not load
+  (`XGBoostError: libxgboost.dylib could not be loaded`; missing OpenMP runtime
+  `libomp.dylib`). This blocked the `forecasting` and `system_performance`
+  areas, so `forecasting_metrics.json`, the `forecasting_*` CSVs/figures, and
+  `system_training_times.json` / `system_api_response_times.json` /
+  `system_hardware_info.json` / `system_parameter_table.json` were never
+  generated. The `system_performance` area is recorded with `status: FAIL` and
+  the `XGBoostError` traceback in `evaluation/results/evaluation_summary.json`.
+
+**What it means:** The Phase 13 evaluation report (`docs/evaluation-report.md`)
+reports the metrics that *were* measured (segmentation k-search/stability, RFM
+profile, elasticity sign statistics, LLM failure handling and prompt
+validation) and marks every blocked metric `[PENDING: run
+evaluation/run_evaluation.py]` rather than inventing a number, per the phase
+hard rule that every reported number must come from a script run. No
+algorithm, parameter, or model was tuned; the scripts themselves are correct
+and produce the expected files on a full run (confirmed by the FEAT-001
+implementation).
+
+**Suggested fix:** Re-run `python evaluation/run_evaluation.py` in an
+environment with (a) a populated `data-pipeline/.env` providing DB credentials
+for `revenue_management` and `revenue_management_gt`, and (b) a working XGBoost
+installation (`brew install libomp` on macOS, or use the project's
+`data-pipeline/venv`). The pending result files and the `[PENDING]` report
+sections will then be populated with measured numbers. No code change is
+required.
