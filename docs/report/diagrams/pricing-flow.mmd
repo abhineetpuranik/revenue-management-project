@@ -1,0 +1,37 @@
+flowchart TD
+    A["XGBoost Baseline Forecast\n(weekly units for each product)"]
+
+    B["Candidate Grid Generation\n±15% around current price\nin 1% steps = 31 prices per product\n(PRICE_STEP_PCT=0.01,\n MAX_PRICE_CHANGE_PCT=0.15)\n50 products × 31 = 1 550 candidates total"]
+
+    subgraph Constraints["Apply Constraints (per candidate)"]
+        C1["Margin ≥ 10%\n(MIN_MARGIN_PCT = 0.10)"]
+        C2["Price change ≤ 15%\n(MAX_PRICE_CHANGE_PCT = 0.15)"]
+        C3["Price within observed\nhistorical range\n(PRICE_RANGE_TOLERANCE_PCT = 0.0)"]
+        C4["Elasticity reliable?\n(reliable_flag = 1)\nFlags: POSITIVE_BETA,\n CI_CROSSES_ZERO,\n LOW_PRICE_VARIATION"]
+        C5["Expected demand ≤\navailable stock\n(stock cap)"]
+    end
+
+    D{"Candidate\npasses all\nconstraints?"}
+
+    E["Mark passes_all = 0\nRecord failed_reasons\n(e.g. BELOW_MARGIN,\n OUT_OF_RANGE)"]
+
+    F["Elasticity-Scaled Demand\ndemand_i = baseline × (price_i / current_price)^elasticity\n(log-linear demand model)"]
+
+    G["Compute Expected Revenue\nrevenue_i = price_i × demand_i"]
+
+    H["Select Maximum Revenue Candidate\n(subject to REVENUE_TIE_TOLERANCE = 0.001)\n→ recommended_price, expected_revenue,\n  revenue_change_pct, binding_constraint"]
+
+    I["Store Recommendation\nMySQL: pricing_recommendation\nMySQL: pricing_candidates\n→ Flask API → Angular Dashboard"]
+
+    A --> B
+    B --> C1
+    C1 --> C2
+    C2 --> C3
+    C3 --> C4
+    C4 --> C5
+    C5 --> D
+    D -- No --> E
+    D -- Yes --> F
+    F --> G
+    G --> H
+    H --> I

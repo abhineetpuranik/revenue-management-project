@@ -1,0 +1,65 @@
+flowchart LR
+    subgraph DataGen["Data Generation"]
+        DG["Synthetic Dataset Generator\n(data_generation/)"]
+    end
+
+    subgraph ETL["ETL"]
+        CLEAN["Clean Tables\n(etl/clean_tables.py)"]
+        LOAD["Load to MySQL\n(etl/load_to_mysql.py)"]
+    end
+
+    subgraph DBLayer["MySQL"]
+        RM[("revenue_management")]
+        RMGT[("revenue_management_gt\n(ground truth — read-only)")]
+    end
+
+    subgraph Features["Feature Engineering"]
+        FE["Build Feature Table\n(features/build_feature_table.py)"]
+    end
+
+    subgraph Modelling["Forecasting"]
+        LR["Linear Regression\nbaseline (models/)"]
+        XGB["XGBoost\n(models/)"]
+        ART["Model Artifacts\n(models/artifacts/)"]
+    end
+
+    subgraph Analytics["Analytics"]
+        ELAS["Price Elasticity\n(pricing/estimate_elasticity.py)"]
+        SEG["Customer Segmentation\n(segmentation/run_segmentation.py)"]
+        CAND["Candidate Generation\n(pricing/build_candidates.py)"]
+        PRICE["Pricing Optimisation\n(pricing/run_pricing.py)"]
+        EXPL["LLM Explanations\n(explanations/)"]
+    end
+
+    subgraph Serving["Serving"]
+        API["Flask REST API\n(backend/)"]
+        UI["Angular Dashboard\n(frontend/)"]
+    end
+
+    DG --> CLEAN
+    CLEAN --> LOAD
+    LOAD --> RM
+    DG --> RMGT
+
+    RM --> FE
+    FE --> LR
+    FE --> XGB
+    LR --> ART
+    XGB --> ART
+
+    RM --> ELAS
+    RM --> SEG
+    ART --> PRICE
+    ELAS --> CAND
+    CAND --> PRICE
+    SEG --> EXPL
+    PRICE --> EXPL
+
+    PRICE --> RM
+    SEG --> RM
+    ELAS --> RM
+    EXPL --> RM
+
+    RM --> API
+    ART --> API
+    API --> UI

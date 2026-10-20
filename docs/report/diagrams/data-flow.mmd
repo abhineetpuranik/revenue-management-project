@@ -1,0 +1,52 @@
+flowchart TD
+    subgraph DataGeneration["Data Generation"]
+        CFG["config.py\n(seeds, counts, factors)"]
+        GBT["generate_base_tables.py\n→ products.csv, customers.csv,\n  prices.csv, discounts.csv,\n  calendar.csv"]
+        GTT["generate_transactional_tables.py\n→ sales.csv, stock_movements.csv"]
+        GTDB["ground_truth CSVs\n(true_elasticity, true_segment)"]
+        CFG --> GBT
+        GBT --> GTT
+        CFG --> GTT
+        GBT --> GTDB
+    end
+
+    subgraph ETL["ETL"]
+        CLEAN["clean_tables.py\n(type casting, range checks,\n duplicate removal)\n→ cleaned CSVs in data/cleaned/"]
+        LOADDB["load_to_mysql.py\n→ revenue_management tables\n→ revenue_management_gt tables"]
+        GTT --> CLEAN
+        GTDB --> LOADDB
+        CLEAN --> LOADDB
+    end
+
+    subgraph FeatureEngineering["Feature Engineering"]
+        FE["build_feature_table.py\nJoins sales + price + stock + calendar;\ncomputes lag features, rolling means,\nseasonal encodings, promo flags\n→ features/feature_table.csv\n→ MySQL (feature table)"]
+        LOADDB --> FE
+    end
+
+    subgraph Modelling["Modelling"]
+        TRAIN["train_forecasting_models.py\nTrains LR + XGBoost on 7 300 rows\n(2022-01-17 → 2024-10-28)\nEvaluates on 400 test rows\n(2024-11-04 → 2024-12-23)\n→ models/artifacts/\n   xgboost_model.pkl, lr_model.pkl,\n   metadata.json"]
+        ELAS["estimate_elasticity.py\nLog-log OLS per product (≥52 obs)\ncontrols: promo_days, log_seasonal,\nfestival_days\n→ MySQL product_elasticity"]
+        SEG["run_segmentation.py\nRFM aggregation → k-means (k=4)\nsilhouette peak 0.8573\n→ MySQL customer_rfm_segment,\n   segment_summary"]
+        CAND["build_candidates.py\n±15% price grid (1% steps = 31 pts)\n→ MySQL pricing_candidates"]
+        PRICE["run_pricing.py\nApplies constraints; elasticity-scaled\ndemand; selects max-revenue candidate\n→ MySQL pricing_recommendation"]
+        EXPL["generate_explanations.py\nLLM or fallback text per product\nand segment\n→ MySQL llm_explanation"]
+        FE --> TRAIN
+        FE --> ELAS
+        FE --> SEG
+        TRAIN --> CAND
+        ELAS --> CAND
+        CAND --> PRICE
+        PRICE --> EXPL
+        SEG --> EXPL
+    end
+
+    subgraph Serving["Serving"]
+        API["Flask REST API\n(backend/app.py)\nBlueprints: forecast, segments,\npricing, explanations\nPort 5000"]
+        UI["Angular Dashboard\n(frontend/)\nRoutes: /forecast, /segments,\n/pricing\nPort 4200"]
+        TRAIN --> API
+        PRICE --> API
+        SEG --> API
+        ELAS --> API
+        EXPL --> API
+        API --> UI
+    end

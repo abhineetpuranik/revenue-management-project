@@ -1,0 +1,173 @@
+erDiagram
+
+    %% ─── revenue_management schema ───────────────────────────────────────────
+
+    product {
+        VARCHAR10   product_id   PK
+        VARCHAR30   category
+        DECIMAL102  base_price
+        INT         base_demand
+    }
+
+    customer {
+        VARCHAR10   customer_id  PK
+    }
+
+    calendar {
+        DATE        date              PK
+        SMALLINT    year
+        TINYINT     month
+        TINYINT     weekday
+        VARCHAR10   weekday_name
+        TINYINT1    is_weekend
+        DECIMAL64   seasonal_factor
+        DECIMAL64   weekday_factor
+        DECIMAL64   combined_factor
+        TINYINT1    festival_flag
+    }
+
+    price {
+        VARCHAR10   product_id    PK  FK
+        DATE        date          PK  FK
+        DECIMAL102  price
+        TINYINT1    is_promo
+        DECIMAL64   discount_pct
+    }
+
+    stock {
+        VARCHAR10   product_id      PK  FK
+        DATE        date            PK  FK
+        INT         stock_level
+        INT         units_restocked
+        TINYINT1    stockout_flag
+    }
+
+    sales {
+        INT         sale_id        PK
+        VARCHAR10   customer_id    FK
+        VARCHAR10   product_id     FK
+        DATE        date           FK
+        INT         units_sold
+        DECIMAL102  price_at_sale
+        DECIMAL64   discount_pct
+        DECIMAL122  revenue
+    }
+
+    customer_rfm_segment {
+        VARCHAR10   customer_id   PK  FK
+        INT         recency_days
+        INT         frequency
+        DECIMAL142  monetary
+        INT         cluster_id
+        VARCHAR20   segment_label
+        DATETIME    assigned_at
+    }
+
+    segment_summary {
+        VARCHAR20   segment_label        PK
+        INT         customer_count
+        DECIMAL62   share_pct
+        DECIMAL102  mean_recency_days
+        DECIMAL102  median_recency_days
+        DECIMAL102  mean_frequency
+        DECIMAL102  median_frequency
+        DECIMAL142  mean_monetary
+        DECIMAL142  median_monetary
+        DECIMAL162  total_revenue
+        DECIMAL62   revenue_share_pct
+        DATETIME    assigned_at
+    }
+
+    product_elasticity {
+        VARCHAR10   product_id          PK  FK
+        VARCHAR30   category
+        DECIMAL84   elasticity
+        DECIMAL84   std_error
+        DECIMAL84   ci_low
+        DECIMAL84   ci_high
+        DECIMAL64   r_squared
+        INT         n_obs
+        TINYINT1    reliable_flag
+        VARCHAR100  unreliable_reasons
+        DATETIME    estimated_at
+    }
+
+    pricing_candidates {
+        VARCHAR10   product_id      PK  FK
+        INT         step            PK
+        DECIMAL102  candidate_price
+        DECIMAL84   change_pct
+        DECIMAL104  unit_cost
+        DECIMAL84   margin_pct
+        TINYINT1    is_current
+        TINYINT1    passes_all
+        VARCHAR100  failed_reasons
+    }
+
+    pricing_recommendation {
+        VARCHAR10   product_id         PK  FK
+        VARCHAR30   category
+        DECIMAL102  current_price
+        DECIMAL102  recommended_price
+        DECIMAL84   change_pct
+        DECIMAL84   elasticity
+        DECIMAL122  baseline_demand
+        DECIMAL122  expected_demand
+        INT         available_stock
+        DECIMAL142  current_revenue
+        DECIMAL142  expected_revenue
+        DECIMAL84   revenue_change_pct
+        DECIMAL104  unit_cost
+        DECIMAL84   margin_pct
+        DECIMAL142  expected_profit
+        TINYINT1    stock_limited
+        VARCHAR30   binding_constraint
+        VARCHAR100  reason_codes
+        VARCHAR30   model_type
+        VARCHAR10   forecast_week
+        DATETIME    generated_at
+    }
+
+    llm_explanation {
+        INT         explanation_id   PK
+        VARCHAR10   entity_type
+        VARCHAR20   entity_id        "UNIQUE with entity_type"
+        VARCHAR1000 explanation_text
+        VARCHAR10   source
+        TEXT        payload_json
+        CHAR64      payload_hash
+        VARCHAR60   model_name
+        VARCHAR10   guardrail_status
+        VARCHAR255  rejection_reason
+        INT         attempts
+        DATETIME    generated_at
+    }
+
+    %% ─── revenue_management_gt schema (read-only, no FK to main schema) ──────
+
+    gt_product_elasticity {
+        VARCHAR10   product_id      PK
+        DECIMAL84   true_elasticity
+    }
+
+    gt_customer_segment {
+        VARCHAR10   customer_id    PK
+        VARCHAR20   true_segment
+        DECIMAL53   purchase_rate
+        DECIMAL82   basket_mean
+        DECIMAL82   basket_std
+    }
+
+    %% ─── Relationships ────────────────────────────────────────────────────────
+
+    product             ||--o{ price                   : "has prices"
+    calendar            ||--o{ price                   : "priced on"
+    product             ||--o{ stock                   : "has stock"
+    calendar            ||--o{ stock                   : "stocked on"
+    customer            ||--o{ sales                   : "makes"
+    product             ||--o{ sales                   : "sold in"
+    calendar            ||--o{ sales                   : "occurs on"
+    customer            ||--|| customer_rfm_segment     : "has RFM"
+    product             ||--|| product_elasticity       : "has elasticity"
+    product             ||--o{ pricing_candidates       : "has candidates"
+    product             ||--|| pricing_recommendation   : "has recommendation"
