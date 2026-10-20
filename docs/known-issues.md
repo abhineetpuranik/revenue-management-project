@@ -74,3 +74,41 @@ an error in the future. This includes implicit conversion of bare integers.
 **Severity:** Low  
 **Evidence:** The README says `ng serve` but a fresh clone does not have Angular CLI on the global PATH. The command must be run as `npx ng serve` unless `npm install -g @angular/cli` has been run.  
 **Suggested fix:** Replace bare `ng serve` with `npx ng serve` in the README (or document as a prerequisite).
+
+---
+
+## KI-09: Ground-truth fields appear in ETL cleaning/validation code (known, justified)
+
+**Severity:** Low (finding, not a bug — no application code should change)  
+**Evidence:** The Phase 13 ground-truth isolation test
+(`data-pipeline/tests/test_phase13_gt_isolation.py`) greps all application
+packages (`etl/`, `features/`, `models/`, `segmentation/`, `pricing/`,
+`explanations/`, `backend/routes/`, `backend/services/`) for ground-truth
+identifiers (`revenue_management_gt`, `true_elasticity`, `true_segment`,
+`gt_product_elasticity`, `gt_customer_segment`, `purchase_rate`,
+`basket_mean`, `basket_std`).  Three application files legitimately reference
+these names and are therefore on the test's `ALLOWED_FILES` allowlist:
+
+- `data-pipeline/etl/cleaning.py` — the synthetic data generator bakes
+  `true_elasticity` (product) and `true_segment` / `purchase_rate` /
+  `basket_mean` / `basket_std` (customer) into the raw CSVs.  `cleaning.py`
+  cleans those raw columns so `load_to_mysql.py` can route them into the
+  separate GT database (`revenue_management_gt`).  This is ETL plumbing in
+  the GT-routing chain, not application decision logic consuming GT.
+- `data-pipeline/etl/validation.py` — ETL data-quality check asserting
+  `true_elasticity < 0` on the cleaned product table.
+- `data-pipeline/pricing/validate_elasticity.py` — validation hook comparing
+  estimated vs. true elasticity via `get_gt_engine()` (the proper GT read
+  path).  It is the sibling of the already-allowed `validate_pricing.py` and
+  `validate_segmentation.py`, and the existing
+  `test_pricing_optimizer.py` already excludes all `validate_*.py` via its
+  `startswith("validate_")` convention.
+
+**What it means:** The GT-isolation boundary is "no application DECISION
+logic (models / pricing / segmentation / explanations / backend routes &
+services) may read ground truth"; the ETL chain that physically moves the
+generated GT into the GT database, and the validation hooks that compare
+against it, are legitimately allowed.  No model, pricing, segmentation, or
+explanation module reads GT.
+**Suggested fix:** None.  This is documented behaviour.  The allowlist and
+rationale live in `test_phase13_gt_isolation.py`; the test passes.
