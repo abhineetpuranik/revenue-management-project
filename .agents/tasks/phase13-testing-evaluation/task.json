@@ -1,0 +1,7 @@
+{
+  "task_id": "task-phase13-testing-evaluation",
+  "task_description": "Phase 13: Build a reproducible evaluation and testing layer for an AI-powered demand forecasting and dynamic pricing system. Measure how well each module works (forecasting, segmentation, elasticity, pricing, LLM layer, system performance), add pytest tests for critical gaps, and produce written evaluation and test reports. MEASURE ONLY — no algorithm, parameter, SQL, schema, model, or application behavior changes.",
+  "status": "pending",
+  "feature_order": ["FEAT-001", "FEAT-002", "FEAT-003"],
+  "blocked_reason": null
+}
