@@ -32,16 +32,16 @@ The following entries correspond to [CITATION NEEDED] placeholders in Chapter 2 
 
 12. Python Software Foundation. (2023). *Python*. Version 3.11. [Software]. Available at: https://www.python.org/
 
-13. Pedregosa, F., Varoquaux, G., Gramfort, A., Michel, V., Thirion, B., Grisel, O., Blondel, M., Prettenhofer, P., Weiss, R., Dubourg, V., Vanderplas, J., Passos, A., Cournapeau, D., Brucher, M., Perrot, M., & Duchesneau, E. (2011). *scikit-learn: Machine Learning in Python*. *Journal of Machine Learning Research*, 12, 2825–2830. Version [CITATION NEEDED — confirm version used: check `data-pipeline/requirements.txt`]. [Software]. Available at: https://scikit-learn.org/
+13. Pedregosa, F., Varoquaux, G., Gramfort, A., Michel, V., Thirion, B., Grisel, O., Blondel, M., Prettenhofer, P., Weiss, R., Dubourg, V., Vanderplas, J., Passos, A., Cournapeau, D., Brucher, M., Perrot, M., & Duchesneau, E. (2011). *scikit-learn: Machine Learning in Python*. *Journal of Machine Learning Research*, 12, 2825–2830. Version 1.5.2 (as specified in `data-pipeline/requirements.txt`). [Software]. Available at: https://scikit-learn.org/
 
-14. Chen, T., & Guestrin, C. (2016). *XGBoost*. Version [CITATION NEEDED — confirm version used: check `data-pipeline/requirements.txt`]. [Software]. Available at: https://xgboost.readthedocs.io/
+14. Chen, T., & Guestrin, C. (2016). *XGBoost*. Version 2.1.3 (as specified in `data-pipeline/requirements.txt`). [Software]. Available at: https://xgboost.readthedocs.io/
 
-15. Seabold, S., & Perktold, J. (2010). *statsmodels: Econometric and Statistical Modeling with Python*. In *Proceedings of the 9th Python in Science Conference*. Version [CITATION NEEDED — confirm version used: check `data-pipeline/requirements.txt`]. [Software]. Available at: https://www.statsmodels.org/
+15. ~~Seabold, S., & Perktold, J. (2010). statsmodels.~~ *Note: statsmodels is not used in this project. The log-log OLS elasticity estimator is implemented using NumPy directly in `data-pipeline/pricing/elasticity_model.py`. This reference entry should be removed from the final report.*
 
-16. Grinberg, M. (2018). *Flask*. Version [CITATION NEEDED — confirm version used: check `backend/requirements.txt`]. [Software]. Available at: https://flask.palletsprojects.com/
+16. Pallets Projects. (2024). *Flask*. Version 3.1.0 (as specified in `backend/requirements.txt`). [Software]. Available at: https://flask.palletsprojects.com/
 
 17. Google LLC. (2024). *Angular*. Version 21. [Software]. Available at: https://angular.dev/
 
-18. Chart.js Contributors. (2023). *Chart.js*. Version [CITATION NEEDED — confirm version used: check `frontend/package.json`]. [Software]. Available at: https://www.chartjs.org/
+18. Chart.js Contributors. (2023). *Chart.js*. Version 4.5.1 (as specified in `frontend/package.json`). [Software]. Available at: https://www.chartjs.org/
 
 19. Oracle Corporation. (2023). *MySQL Community Server*. Version 8.0. [Software]. Available at: https://dev.mysql.com/downloads/mysql/

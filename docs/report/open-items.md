@@ -88,14 +88,18 @@ Every placeholder, [CITATION NEEDED], [TEAM TO FILL], and [TEAM TO CONFIRM] item
 
 ## references.md
 
-### CITATION NEEDED — Software version fields
+### CITATION NEEDED — Software version fields (RESOLVED)
 
-- [CITATION NEEDED] scikit-learn version used — check `data-pipeline/requirements.txt` | file: references.md | context: Reference 13
-- [CITATION NEEDED] XGBoost version used — check `data-pipeline/requirements.txt` | file: references.md | context: Reference 14
-- [CITATION NEEDED] statsmodels version used — check `data-pipeline/requirements.txt` | file: references.md | context: Reference 15
-- [CITATION NEEDED] Flask version used — check `backend/requirements.txt` | file: references.md | context: Reference 16
-- [CITATION NEEDED] Chart.js version used — check `frontend/package.json` | file: references.md | context: Reference 18
-- [CITATION NEEDED] All academic reference details: edition, year, journal details, page numbers, DOIs — listed in full in the ch02-literature-review.md section above (items 1–11) | file: references.md | context: References (A) section, items 1–11
+The following software versions have been filled in from `requirements.txt` and `package.json`:
+
+- scikit-learn: **1.5.2** (`data-pipeline/requirements.txt`) ✅
+- XGBoost: **2.1.3** (`data-pipeline/requirements.txt`) ✅
+- statsmodels: **not used** — elasticity uses hand-coded NumPy OLS in `pricing/elasticity_model.py`; reference entry 15 should be removed ✅
+- Flask: **3.1.0** (`backend/requirements.txt`) ✅
+- Chart.js: **4.5.1** (`frontend/package.json`) ✅
+
+Remaining in references.md:
+- [CITATION NEEDED] All 11 academic reference details (editions, journal volumes, page numbers, DOIs) — listed in ch02-literature-review.md section above
 
 ---
 
@@ -141,7 +145,9 @@ The following discrepancies were found between documentation files and the code 
 
 - TEAM TO FILL: 18 items
 - TEAM TO CONFIRM: 5 items
-- CITATION NEEDED: 17 items (11 academic + 6 software versions)
+- CITATION NEEDED: 11 items (11 academic — software versions resolved ✅)
 - PENDING evaluation: 16 items (all resolve by re-running `evaluation/run_evaluation.py` with live DB and working XGBoost)
 - Pending screenshots: 6 items (Figures 10–15)
 - Diagrams to export: 5 items (architecture.mmd, data-flow.mmd, er-diagram.mmd, pricing-flow.mmd, dataset-generation.mmd)
+
+**Total remaining items: 61** (was 67; 6 software version citations resolved)
