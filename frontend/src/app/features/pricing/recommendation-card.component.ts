@@ -223,18 +223,13 @@ export class RecommendationCardComponent {
       return { type: 'bar', data: { labels: [], datasets: [] } };
     }
 
-    const currentDataset: ChartDataset<'bar', number[]> = {
-      label: 'Current Revenue',
-      data: [r.current_revenue],
-      backgroundColor: 'rgba(17, 17, 17, 0.8)',
-      borderColor: '#111111',
-      borderWidth: 2,
-    };
-
-    const recommendedDataset: ChartDataset<'bar', number[]> = {
-      label: 'Expected Revenue',
-      data: [r.expected_revenue],
-      backgroundColor: this.isRevenuePositive() ? '#3CC9B4' : '#FF6B57',
+       const revenueDataset: ChartDataset<'bar', number[]> = {
+      label: 'Weekly Revenue',
+      data: [r.current_revenue, r.expected_revenue],
+      backgroundColor: [
+        'rgba(17, 17, 17, 0.8)',
+        this.isRevenuePositive() ? '#3CC9B4' : '#FF6B57',
+      ],
       borderColor: '#111111',
       borderWidth: 2,
     };
@@ -243,20 +238,12 @@ export class RecommendationCardComponent {
       type: 'bar',
       data: {
         labels: ['Current Price', 'Recommended Price'],
-        datasets: [currentDataset, recommendedDataset],
-      },
+        datasets: [revenueDataset],      },
       options: {
         responsive: true,
         maintainAspectRatio: false,
         plugins: {
-          legend: {
-            position: 'top',
-            labels: {
-              font: { family: "'Space Mono', monospace", size: 11 },
-              boxWidth: 14,
-              padding: 12,
-            },
-          },
+                   legend: { display: false },
           tooltip: {
             callbacks: {
               label: (item) => {
