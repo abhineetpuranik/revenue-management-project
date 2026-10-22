@@ -92,7 +92,7 @@ All endpoints are read-only GET requests served at base URL `http://localhost:50
 
 The `binding_constraint` field in pricing responses can take the values `MAX_CHANGE`, `MARGIN`, `PRICE_RANGE`, `ELASTICITY_UNRELIABLE`, `STOCK`, `NO_FEASIBLE_PRICE`, and `TIE_TOLERANCE`. The last value, `TIE_TOLERANCE`, is not yet listed in `api.md` (KI-01): seven products (P013, P015, P016, P018, P021, P022, P030) return this value, and a Phase 13 contract test now guards the behaviour, but the documentation has not been updated.
 
-One field, `revenue_change_abs` (the absolute £ revenue change), is computed by the API layer as `expected_revenue − current_revenue` rather than stored in the `pricing_recommendation` table (KI-07).
+One field, `revenue_change_abs` (the absolute ₹ revenue change), is computed by the API layer as `expected_revenue − current_revenue` rather than stored in the `pricing_recommendation` table (KI-07).
 
 ## 4.5 Dashboard Design
 

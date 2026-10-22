@@ -346,7 +346,7 @@ Returns one customer's segment label and RFM values.
 |---|---|
 | `recency_days` | Days between the customer's last purchase and the snapshot date (2025-01-01). Lower = more recent. |
 | `frequency` | Total number of purchase transactions over the 3-year dataset. |
-| `monetary` | Total spend (£) over the 3-year dataset. |
+| `monetary` | Total spend (₹) over the 3-year dataset. |
 | `actual_units` | True units sold that week (from the sales table). |
 | `predicted_units` | XGBoost model prediction for that week. Only present on `"test"` rows. |
 | `row_type` | `"history"` = training data (no prediction); `"test"` = held-out evaluation window. |
@@ -618,5 +618,5 @@ Natural-language description of a customer segment.
 - The `payload` field in explanation responses contains the exact structured numbers the LLM was given. You can use it to cross-check any number that appears in the explanation text.
 - `source` tells you the origin: `"llm"` = real Gemini response, `"fallback"` = template sentence (LLM was rejected by guardrails), `"mock"` = no API key configured.
 - `binding_constraint` in pricing responses explains what stopped the recommendation from going further. See the constraint table in [results.md](results.md) for all possible values.
-- `revenue_change_abs` is `expected_revenue - current_revenue` in £, computed by the API for convenience.
+- `revenue_change_abs` is `expected_revenue - current_revenue` in ₹, computed by the API for convenience.
 - The `constraints_applied` object always reflects what Phase 8 actually used (read from `pricing_config.py` at import time).

@@ -622,7 +622,7 @@ All endpoints are read-only GET requests served at base URL `http://localhost:50
 
 The `binding_constraint` field in pricing responses can take the values `MAX_CHANGE`, `MARGIN`, `PRICE_RANGE`, `ELASTICITY_UNRELIABLE`, `STOCK`, `NO_FEASIBLE_PRICE`, and `TIE_TOLERANCE`. The last value, `TIE_TOLERANCE`, is not yet listed in `api.md` (KI-01): seven products (P013, P015, P016, P018, P021, P022, P030) return this value, and a Phase 13 contract test now guards the behaviour, but the documentation has not been updated.
 
-One field, `revenue_change_abs` (the absolute £ revenue change), is computed by the API layer as `expected_revenue − current_revenue` rather than stored in the `pricing_recommendation` table (KI-07).
+One field, `revenue_change_abs` (the absolute ₹ revenue change), is computed by the API layer as `expected_revenue − current_revenue` rather than stored in the `pricing_recommendation` table (KI-07).
 
 ## 4.5 Dashboard Design
 
@@ -753,7 +753,7 @@ All parameters are fixed at generation time via `config.py`. The random seed (`R
 | `avg_discount_price` | Average discount as a fraction of the listed price |
 | `promo_days` | Number of promotional days in the week |
 | `avg_price` | Average of price-at-sale in the week |
-| `avg_discount` | Average discount amount in £ |
+| `avg_discount` | Average discount amount in ₹ |
 
 The feature set was designed a priori based on the known demand-generating process. No automated feature selection was performed.
 
@@ -814,7 +814,7 @@ where ε = 1×10⁻⁸ (defined as `EPSILON` in `models/evaluate.py`). This avoi
 Step 1 — Compute RFM scores.
 - Recency: days between the customer's last purchase date and the snapshot date 2025-01-01. Lower = more recent.
 - Frequency: total number of sale transactions over the three-year dataset.
-- Monetary: total spend (£) over the three-year dataset.
+- Monetary: total spend (₹) over the three-year dataset.
 
 Step 2 — Feature transformation and standardisation. Log-transform each RFM dimension with `log1p` (i.e. log(1 + x)), then standardise with `StandardScaler`. Log transformation reduces the skew that arises because high-value customers have disproportionately large monetary values.
 
@@ -836,7 +836,7 @@ Step 4 — Assign descriptive labels. `label_clusters()` examines the centroids 
 
 **Segment sizes** (source: `evaluation/results/segmentation_rfm_profile.csv`):
 
-| Segment | Customers | Mean recency (days) | Mean frequency | Mean monetary (£) |
+| Segment | Customers | Mean recency (days) | Mean frequency | Mean monetary (₹) |
 |---|---|---|---|---|
 | high_value | 160 | 1.02 | 1 037.05 | 58 087.23 |
 | regular | 346 | 1.16 | 851.70 | 29 086.92 |
@@ -974,7 +974,7 @@ This consistent contract means the Angular frontend can apply a single error-han
 
 **Notable endpoint details:**
 - `GET /api/pricing/<product_id>` always returns HTTP 200, even when no valid candidate price exists (`recommendation_available: false`). HTTP 404 is returned only when the `product_id` is not in the database at all.
-- The `revenue_change_abs` field (absolute £ revenue change) is computed by the API as `expected_revenue − current_revenue` and is not stored in the `pricing_recommendation` table (KI-07). This avoids storing a value that is trivially derived from two existing columns.
+- The `revenue_change_abs` field (absolute ₹ revenue change) is computed by the API as `expected_revenue − current_revenue` and is not stored in the `pricing_recommendation` table (KI-07). This avoids storing a value that is trivially derived from two existing columns.
 - `GET /api/forecast/<product_id>/explanation` always returns HTTP 200 with `explanation_available: false`, so the Angular dashboard does not need special-casing for this endpoint.
 - `GET /api/segments` embeds the silhouette score as a fixed value in the service layer rather than reading it from a database column. It reflects the k=4 clustering run from Phase 6.
 
@@ -990,7 +990,7 @@ See `docs/api.md` for the complete endpoint specification including all request 
 
 **Segments view (`/segments`).** Three stat tiles show total customers (1 000), number of clusters (4), and silhouette score (0.8573). A segment summary table shows each segment's customer count, revenue share, and mean RFM values. A Chart.js doughnut chart visualises revenue share across the four segments. A customer lookup field and a paginated, segment-filterable customer table allow exploration of individual records.
 
-**Pricing view (`/pricing`).** `PricingComponent` acts as the orchestrator. On product selection, it fires two requests: `GET /api/pricing/<id>` (guarded by `recToken`) and `GET /api/pricing/<id>/explanation` (guarded by `expToken` with a 35-second timeout). `RecommendationCardComponent` renders the full recommendation or a neutral no-candidate block depending on `recommendation_available`. It shows current and recommended prices, a direction tag (INCREASE/DECREASE/KEEP), revenue change tiles with £ symbol and directional arrow (↑/↓), a Chart.js bar chart comparing current and expected weekly revenue, the elasticity estimate, constraint chips, and reason codes. `ExplanationPanelComponent` handles four states: `loading`, `available`, `unavailable`, and `error`. In the `available` state, the explanation text is rendered via Angular interpolation (never `innerHTML`), so any markup in LLM output appears as literal characters. `RecommendationsTableComponent` provides a paginated table of all 50 products.
+**Pricing view (`/pricing`).** `PricingComponent` acts as the orchestrator. On product selection, it fires two requests: `GET /api/pricing/<id>` (guarded by `recToken`) and `GET /api/pricing/<id>/explanation` (guarded by `expToken` with a 35-second timeout). `RecommendationCardComponent` renders the full recommendation or a neutral no-candidate block depending on `recommendation_available`. It shows current and recommended prices, a direction tag (INCREASE/DECREASE/KEEP), revenue change tiles with ₹ symbol and directional arrow (↑/↓), a Chart.js bar chart comparing current and expected weekly revenue, the elasticity estimate, constraint chips, and reason codes. `ExplanationPanelComponent` handles four states: `loading`, `available`, `unavailable`, and `error`. In the `available` state, the explanation text is rendered via Angular interpolation (never `innerHTML`), so any markup in LLM output appears as literal characters. `RecommendationsTableComponent` provides a paginated table of all 50 products.
 
 **Test results.** All 76 frontend specs across 10 spec files pass with zero failures (source: `docs/frontend.md`). Bundle sizes: forecast 41 kB, segments 50 kB, pricing 103 kB, all well within the 1 MB error threshold.
 
@@ -1216,7 +1216,7 @@ finds the same partition regardless of starting point.
 Source: `evaluation/results/segmentation_rfm_profile.csv` (means computed over
 1 000 customers, by predicted segment label).
 
-| Segment | Customers | Mean recency (days) | Mean frequency | Mean monetary (£) |
+| Segment | Customers | Mean recency (days) | Mean frequency | Mean monetary (₹) |
 |---|---|---|---|---|
 | high_value | 160 | 1.02 | 1 037.05 | 58 087.23 |
 | regular | 346 | 1.16 | 851.70 | 29 086.92 |
@@ -1798,7 +1798,7 @@ Total: 50 products. Each product's `true_elasticity` is drawn as `N(anchor, nois
 
 Four customer segments are defined with true behavioural parameters. Each customer is assigned to one segment at generation time; the assignment is stored in `revenue_management_gt.gt_customer_segment`.
 
-| Segment | True Weight | Purchase Rate (per day) | Basket Mean (£) | Basket Std (£) |
+| Segment | True Weight | Purchase Rate (per day) | Basket Mean (₹) | Basket Std (₹) |
 |---|---|---|---|---|
 | `high_value` | 0.15 (15%) | 0.40 | 85.00 | 20.00 |
 | `regular` | 0.35 (35%) | 0.20 | 40.00 | 12.00 |
@@ -1842,7 +1842,7 @@ Source: `data-pipeline/pricing/pricing_config.py`
 | `MIN_MARGIN_PCT` | 0.10 | Minimum acceptable margin: `(price − unit_cost) / price ≥ 0.10` |
 | `MAX_PRICE_CHANGE_PCT` | 0.15 | Maximum price move from current price: `|change| ≤ 15%` |
 | `PRICE_STEP_PCT` | 0.01 | Grid resolution: candidate prices are generated in 1% steps |
-| `REVENUE_TIE_TOLERANCE` | 0.001 | Two candidates are considered tied if revenues differ by less than £0.001 |
+| `REVENUE_TIE_TOLERANCE` | 0.001 | Two candidates are considered tied if revenues differ by less than ₹0.001 |
 | `ALLOW_EXTRAPOLATION` | False | Candidate prices outside the product's historical price range are rejected |
 | `PRICE_RANGE_TOLERANCE_PCT` | 0.0 | No tolerance added to the historical price range boundary |
 | `PRICE_DECIMALS` | 2 | Candidate prices are rounded to 2 decimal places |
@@ -1997,7 +1997,7 @@ The Forecast view displays the weekly demand time series for a selected product,
 5. The MAPE/RMSE/MAE tiles and model comparison table display stored metadata from `models/artifacts/metadata.json`.
 
 **Product examples:**
-- **P001** (Staples, current price £3.28, elasticity −0.47): low elasticity; relatively stable demand; the Pricing view recommends a price increase to £3.77.
+- **P001** (Staples, current price ₹3.28, elasticity −0.47): low elasticity; relatively stable demand; the Pricing view recommends a price increase to ₹3.77.
 - **P042** (Impulse, high elasticity −2.54): more volatile demand curve reflecting high price sensitivity; the Pricing view recommends a price cut to increase revenue.
 
 #### Segments View (`/segments`)
@@ -2024,7 +2024,7 @@ The Pricing view displays the pricing recommendation for a selected product, alo
 5. The recommendations table at the bottom lists all 50 products; use the category filter or click any row to select a product.
 
 **Product examples:**
-- **P001** (Staples, £3.28 → £3.77, elasticity −0.47): price-inelastic; a 14.9% price increase reduces demand by only ~6%, raising weekly revenue from £1 344 to £1 448 (+7.7%). Binding constraint: `MAX_CHANGE`.
+- **P001** (Staples, ₹3.28 → ₹3.77, elasticity −0.47): price-inelastic; a 14.9% price increase reduces demand by only ~6%, raising weekly revenue from ₹1 344 to ₹1 448 (+7.7%). Binding constraint: `MAX_CHANGE`.
 - **P042** (Impulse, elasticity −2.54): price-elastic; the model recommends a price cut because the demand increase more than offsets the lower unit price, raising total revenue.
 
 ### C.5 Troubleshooting

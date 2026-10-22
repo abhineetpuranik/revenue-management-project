@@ -41,7 +41,7 @@ Lines marked **VERIFY** indicate something that should be confirmed by running t
 
 ## 2. Data-flow trace: one number end-to-end
 
-**Trace:** the `expected_revenue` figure of £1 447.54 shown for P001 in the dashboard.
+**Trace:** the `expected_revenue` figure of ₹1 447.54 shown for P001 in the dashboard.
 
 1. **Raw data** — `data_generation/sales.py` generates a daily sales row for P001 on each calendar day. The `generate_sales()` function applies demand scaling: `demand × seasonal_factor × weekday_factor × elasticity_factor × promo_uplift`. With `RANDOM_SEED=42`, the same sequence is produced every run.
 
@@ -53,11 +53,11 @@ Lines marked **VERIFY** indicate something that should be confirmed by running t
 
 5. **Forecasting** — `models/xgboost_model.py` `predict()` takes the P001 feature row for 2025-W01 as input. The XGBoost model outputs a raw demand value. `pricing/demand_response.py` `baseline_forecast()` calls `model.predict()` to get `baseline_demand = 409.79` units.
 
-6. **Pricing** — `pricing/demand_response.py` `elasticity_scaled_demand()` computes `demand(p) = 409.79 × (3.77 / 3.28)^(−0.4676) = 383.96`. `pricing/revenue.py` `score_candidates()` computes `expected_revenue = 383.96 × 3.77 = £1 447.54`. (Stored with 2 decimal places after `round(d, 2)`.)
+6. **Pricing** — `pricing/demand_response.py` `elasticity_scaled_demand()` computes `demand(p) = 409.79 × (3.77 / 3.28)^(−0.4676) = 383.96`. `pricing/revenue.py` `score_candidates()` computes `expected_revenue = 383.96 × 3.77 = ₹1 447.54`. (Stored with 2 decimal places after `round(d, 2)`.)
 
 7. **API** — `backend/routes/pricing.py` reads the `pricing_recommendation` row and adds `revenue_change_abs = 1447.54 − 1344.12 = 103.42`.
 
-8. **Dashboard** — `frontend/src/app/features/pricing/recommendation-card.component.ts` renders `£1447.54` from `expected_revenue` received in the HTTP response.
+8. **Dashboard** — `frontend/src/app/features/pricing/recommendation-card.component.ts` renders `₹1447.54` from `expected_revenue` received in the HTTP response.
 
 The number passes through 7 layers without modification — the dashboard strictly displays what the API returns.
 
@@ -247,7 +247,7 @@ A: ARI = 1.0 means the K-Means clusters match the true segments perfectly. This 
 **Likely examiner questions:**
 
 Q1: *Why log-log rather than a level regression?*  
-A: The log-log model gives a constant elasticity coefficient directly. The level model (`units = a + b × price`) would give a coefficient with units of "units per £", which varies by price level and is harder to interpret or compare across products.
+A: The log-log model gives a constant elasticity coefficient directly. The level model (`units = a + b × price`) would give a coefficient with units of "units per ₹", which varies by price level and is harder to interpret or compare across products.
 
 Q2: *What makes an elasticity estimate "unreliable"?*  
 A: `pricing/constraints.py` `check_elasticity_reliable()` flags a product as unreliable if the confidence interval spans zero (sign uncertainty) or if the R² is below 0.3. All 50 products pass these checks in the current data.
@@ -315,7 +315,7 @@ A: When two candidate prices produce revenues within 0.001 of each other, the ti
 
 **Why this design?** The guardrail prevents the LLM from inventing or mis-stating numbers. This is the core safety requirement (REQ-21). The fallback ensures the system always produces an explanation without needing the API key.
 
-**Known limitation:** The guardrail is string-based, not semantic. "7.0%" and "7%" are treated as the same number; "£57.70" and "57.70" must both appear in the payload or the check fails. This led to many fallbacks in the current run (source = "fallback" for 38 of 54 explanations).
+**Known limitation:** The guardrail is string-based, not semantic. "7.0%" and "7%" are treated as the same number; "₹57.70" and "57.70" must both appear in the payload or the check fails. This led to many fallbacks in the current run (source = "fallback" for 38 of 54 explanations).
 
 **Likely examiner questions:**
 

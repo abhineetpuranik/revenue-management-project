@@ -50,10 +50,10 @@
   font-weight: var(--font-weight-bold);
 }
 
-.cell--number {
+.cell--number,
+.data-table th.cell--number {
   text-align: right;
 }
-
 .cell--positive {
   color: var(--color-teal);
   font-weight: var(--font-weight-bold);

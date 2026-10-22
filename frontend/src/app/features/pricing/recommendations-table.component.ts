@@ -39,10 +39,10 @@ const CURRENCY_SYMBOL = '£';
               <tr>
                 <th class="mono">Product</th>
                 <th class="mono">Category</th>
-                <th class="mono">Current</th>
-                <th class="mono">Recommended</th>
-                <th class="mono">Change</th>
-                <th class="mono">Revenue Δ</th>
+                <th class="mono cell--number">Current</th>
+                <th class="mono cell--number">Recommended</th>
+                <th class="mono cell--number">Change</th>
+                <th class="mono cell--number">Revenue Δ</th>
                 <th class="mono">Status</th>
               </tr>
             </thead>

@@ -40,7 +40,7 @@ Navigate to **Forecast** (`/forecast`).
 
 **P001 (Staples — raises price, low elasticity):**
 
-- The chart loads automatically for P001 (current price £3.28).
+- The chart loads automatically for P001 (current price ₹3.28).
 - The grey history line shows 12 weeks of training data; the coloured section is the 8-week held-out test window.
 - Purple dashed line = XGBoost predictions.
 
@@ -74,7 +74,7 @@ Click the **High Value** filter button. Scroll to the customer table:
 
 Type **C0001** in the customer lookup:
 
-> "C0001 is a Regular customer — frequency 861 transactions, £31 198 lifetime spend, bought as recently as 1 day ago."
+> "C0001 is a Regular customer — frequency 861 transactions, ₹31 198 lifetime spend, bought as recently as 1 day ago."
 
 ---
 
@@ -84,13 +84,13 @@ Navigate to **Pricing** (`/pricing`).
 
 **P001 (INCREASE — inelastic, elasticity −0.47):**
 
-The card shows £3.28 → £3.77 with an ↑ INCREASE tag and a teal revenue tile.
+The card shows ₹3.28 → ₹3.77 with an ↑ INCREASE tag and a teal revenue tile.
 
 > "P001 is price-inelastic. Even though we raise the price 15%, demand only drops by about 6%, so revenue rises 7.7%. The binding constraint is MAX_CHANGE — the 15% cap we impose to avoid shocking customers."
 
 Point at the bar chart:
 
-> "Current weekly revenue £1 344. Expected £1 448 — a £103 gain."
+> "Current weekly revenue ₹1 344. Expected ₹1 448 — a ₹103 gain."
 
 Point at the elasticity tile:
 
@@ -102,7 +102,7 @@ Select **P042** from the product list:
 
 Select **P023** (Electronics — DECREASE, elasticity −1.83):
 
-> "This is a £237 Electronics product. The recommendation is to cut to £211 — a −11% drop — but revenue rises 10% because demand is so elastic."
+> "This is a ₹237 Electronics product. The recommendation is to cut to ₹211 — a −11% drop — but revenue rises 10% because demand is so elastic."
 
 Point at the AI Explanation panel that loads after the numbers:
 

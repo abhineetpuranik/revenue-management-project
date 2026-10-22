@@ -63,8 +63,8 @@ gracefully.
 Chart.js datasets use concrete hex values (required by Chart.js API), but all other components
 reference tokens via `var(--color-*)`.
 
-**Currency.** `£` (pound sterling) confirmed from `docs/api.md` field glossary ("Total spend
-(£)") and existing Segments view. Defined as `const CURRENCY_SYMBOL = '£'` in each component
+**Currency.** `₹` (pound sterling) confirmed from `docs/api.md` field glossary ("Total spend
+(₹)") and existing Segments view. Defined as `const CURRENCY_SYMBOL = '₹'` in each component
 that uses it.
 
 **Font loading.** Fontsource CSS files listed in `angular.json` → `styles[]` because Sass
@@ -92,7 +92,7 @@ or `[innerHtml]`. Markup in LLM output (e.g. `<b>text</b>`) appears as literal c
 
 | `recommendation_available` | Display |
 |---|---|
-| `true` | Full card: current/recommended prices, direction tag (INCREASE/DECREASE/KEEP), revenue tiles with £ delta + percent, bar chart, elasticity + helper text, constraints, reason codes, details grid |
+| `true` | Full card: current/recommended prices, direction tag (INCREASE/DECREASE/KEEP), revenue tiles with ₹ delta + percent, bar chart, elasticity + helper text, constraints, reason codes, details grid |
 | `false` | Non-error neutral block with `no_candidate_reason`, `binding_constraint`, and whatever current-price information the response contains |
 
 The direction tag and colour of the revenue change are independent signals — both an arrow
@@ -202,7 +202,7 @@ After running `npm start` (frontend) and `python app.py` (backend):
 
 | Check | Expected |
 |---|---|
-| Navigate to /pricing | P001 auto-selected; recommendation card shows current £3.28 and recommended £3.77 |
+| Navigate to /pricing | P001 auto-selected; recommendation card shows current ₹3.28 and recommended ₹3.77 |
 | Direction tag for P001 | INCREASE (recommended > current) |
 | Revenue change tile | Teal background, ↑ arrow, positive amount |
 | Bar chart visible | Two bars: Current Revenue vs Expected Revenue |

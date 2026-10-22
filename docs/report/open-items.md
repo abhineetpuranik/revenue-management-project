@@ -107,10 +107,10 @@ Remaining in references.md:
 
 The following screenshots must be captured with the live system running. See `docs/report/figure-and-screenshot-list.md` §3 for exact instructions.
 
-- [PENDING SCREENSHOT] Figure 10 — Forecast View, product P001 (Staples, current price £3.28, low elasticity). Save to: `docs/report/figures/screenshots/forecast-p001.png`
+- [PENDING SCREENSHOT] Figure 10 — Forecast View, product P001 (Staples, current price ₹3.28, low elasticity). Save to: `docs/report/figures/screenshots/forecast-p001.png`
 - [PENDING SCREENSHOT] Figure 11 — Forecast View, product P042 (Impulse, high elasticity). Save to: `docs/report/figures/screenshots/forecast-p042.png`
 - [PENDING SCREENSHOT] Figure 12 — Segments View (stat tiles, segment table, revenue doughnut chart). Save to: `docs/report/figures/screenshots/segments.png`
-- [PENDING SCREENSHOT] Figure 13 — Pricing View, product P001 (£3.28 → £3.77, binding constraint MAX_CHANGE). Save to: `docs/report/figures/screenshots/pricing-p001.png`
+- [PENDING SCREENSHOT] Figure 13 — Pricing View, product P001 (₹3.28 → ₹3.77, binding constraint MAX_CHANGE). Save to: `docs/report/figures/screenshots/pricing-p001.png`
 - [PENDING SCREENSHOT] Figure 14 — Pricing View, product P023 (Electronics, DECREASE recommendation). Save to: `docs/report/figures/screenshots/pricing-p023.png`
 - [PENDING SCREENSHOT] Figure 15 — Pricing View, product P027 (MARGIN binding constraint). Save to: `docs/report/figures/screenshots/pricing-p027.png`
 

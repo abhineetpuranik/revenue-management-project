@@ -77,7 +77,7 @@ All parameters are fixed at generation time via `config.py`. The random seed (`R
 | `avg_discount_price` | Average discount as a fraction of the listed price |
 | `promo_days` | Number of promotional days in the week |
 | `avg_price` | Average of price-at-sale in the week |
-| `avg_discount` | Average discount amount in £ |
+| `avg_discount` | Average discount amount in ₹ |
 
 The feature set was designed a priori based on the known demand-generating process. No automated feature selection was performed.
 
@@ -138,7 +138,7 @@ where ε = 1×10⁻⁸ (defined as `EPSILON` in `models/evaluate.py`). This avoi
 Step 1 — Compute RFM scores.
 - Recency: days between the customer's last purchase date and the snapshot date 2025-01-01. Lower = more recent.
 - Frequency: total number of sale transactions over the three-year dataset.
-- Monetary: total spend (£) over the three-year dataset.
+- Monetary: total spend (₹) over the three-year dataset.
 
 Step 2 — Feature transformation and standardisation. Log-transform each RFM dimension with `log1p` (i.e. log(1 + x)), then standardise with `StandardScaler`. Log transformation reduces the skew that arises because high-value customers have disproportionately large monetary values.
 
@@ -160,7 +160,7 @@ Step 4 — Assign descriptive labels. `label_clusters()` examines the centroids 
 
 **Segment sizes** (source: `evaluation/results/segmentation_rfm_profile.csv`):
 
-| Segment | Customers | Mean recency (days) | Mean frequency | Mean monetary (£) |
+| Segment | Customers | Mean recency (days) | Mean frequency | Mean monetary (₹) |
 |---|---|---|---|---|
 | high_value | 160 | 1.02 | 1 037.05 | 58 087.23 |
 | regular | 346 | 1.16 | 851.70 | 29 086.92 |
@@ -298,7 +298,7 @@ This consistent contract means the Angular frontend can apply a single error-han
 
 **Notable endpoint details:**
 - `GET /api/pricing/<product_id>` always returns HTTP 200, even when no valid candidate price exists (`recommendation_available: false`). HTTP 404 is returned only when the `product_id` is not in the database at all.
-- The `revenue_change_abs` field (absolute £ revenue change) is computed by the API as `expected_revenue − current_revenue` and is not stored in the `pricing_recommendation` table (KI-07). This avoids storing a value that is trivially derived from two existing columns.
+- The `revenue_change_abs` field (absolute ₹ revenue change) is computed by the API as `expected_revenue − current_revenue` and is not stored in the `pricing_recommendation` table (KI-07). This avoids storing a value that is trivially derived from two existing columns.
 - `GET /api/forecast/<product_id>/explanation` always returns HTTP 200 with `explanation_available: false`, so the Angular dashboard does not need special-casing for this endpoint.
 - `GET /api/segments` embeds the silhouette score as a fixed value in the service layer rather than reading it from a database column. It reflects the k=4 clustering run from Phase 6.
 
@@ -314,6 +314,6 @@ See `docs/api.md` for the complete endpoint specification including all request 
 
 **Segments view (`/segments`).** Three stat tiles show total customers (1 000), number of clusters (4), and silhouette score (0.8573). A segment summary table shows each segment's customer count, revenue share, and mean RFM values. A Chart.js doughnut chart visualises revenue share across the four segments. A customer lookup field and a paginated, segment-filterable customer table allow exploration of individual records.
 
-**Pricing view (`/pricing`).** `PricingComponent` acts as the orchestrator. On product selection, it fires two requests: `GET /api/pricing/<id>` (guarded by `recToken`) and `GET /api/pricing/<id>/explanation` (guarded by `expToken` with a 35-second timeout). `RecommendationCardComponent` renders the full recommendation or a neutral no-candidate block depending on `recommendation_available`. It shows current and recommended prices, a direction tag (INCREASE/DECREASE/KEEP), revenue change tiles with £ symbol and directional arrow (↑/↓), a Chart.js bar chart comparing current and expected weekly revenue, the elasticity estimate, constraint chips, and reason codes. `ExplanationPanelComponent` handles four states: `loading`, `available`, `unavailable`, and `error`. In the `available` state, the explanation text is rendered via Angular interpolation (never `innerHTML`), so any markup in LLM output appears as literal characters. `RecommendationsTableComponent` provides a paginated table of all 50 products.
+**Pricing view (`/pricing`).** `PricingComponent` acts as the orchestrator. On product selection, it fires two requests: `GET /api/pricing/<id>` (guarded by `recToken`) and `GET /api/pricing/<id>/explanation` (guarded by `expToken` with a 35-second timeout). `RecommendationCardComponent` renders the full recommendation or a neutral no-candidate block depending on `recommendation_available`. It shows current and recommended prices, a direction tag (INCREASE/DECREASE/KEEP), revenue change tiles with ₹ symbol and directional arrow (↑/↓), a Chart.js bar chart comparing current and expected weekly revenue, the elasticity estimate, constraint chips, and reason codes. `ExplanationPanelComponent` handles four states: `loading`, `available`, `unavailable`, and `error`. In the `available` state, the explanation text is rendered via Angular interpolation (never `innerHTML`), so any markup in LLM output appears as literal characters. `RecommendationsTableComponent` provides a paginated table of all 50 products.
 
 **Test results.** All 76 frontend specs across 10 spec files pass with zero failures (source: `docs/frontend.md`). Bundle sizes: forecast 41 kB, segments 50 kB, pricing 103 kB, all well within the 1 MB error threshold.

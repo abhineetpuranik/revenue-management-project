@@ -75,10 +75,10 @@ Save screenshots to `docs/report/figures/screenshots/`.
 
 | Figure | Caption | URL / Action | Save as | What to capture |
 |---|---|---|---|---|
-| Figure 10 | Forecast View — Product P001 (Staples, low elasticity) | Navigate to `/forecast`; in the product sidebar select **P001** (current price £3.28) | `docs/report/figures/screenshots/forecast-p001.png` | Full view: category chip bar, product sidebar, Chart.js line chart (history + 8-week test window), MAPE/RMSE/MAE metric tiles, model comparison table. |
+| Figure 10 | Forecast View — Product P001 (Staples, low elasticity) | Navigate to `/forecast`; in the product sidebar select **P001** (current price ₹3.28) | `docs/report/figures/screenshots/forecast-p001.png` | Full view: category chip bar, product sidebar, Chart.js line chart (history + 8-week test window), MAPE/RMSE/MAE metric tiles, model comparison table. |
 | Figure 11 | Forecast View — Product P042 (Impulse, high elasticity) | On `/forecast`, select **P042** | `docs/report/figures/screenshots/forecast-p042.png` | Same layout as Figure 10 for a high-elasticity Impulse product. |
 | Figure 12 | Segments View | Navigate to `/segments` | `docs/report/figures/screenshots/segments.png` | Stat tiles (total customers, k=4, silhouette=0.8573), segment summary table with inline bar charts, revenue doughnut chart (high_value 40.06%, regular 43.38%, occasional 12.80%, at_risk 3.76%). |
-| Figure 13 | Pricing View — Product P001 | Navigate to `/pricing`; select **P001** | `docs/report/figures/screenshots/pricing-p001.png` | Recommendation card (current £3.28 → recommended £3.77, +7.69% revenue, binding constraint MAX_CHANGE), revenue bar chart, LLM explanation panel. |
+| Figure 13 | Pricing View — Product P001 | Navigate to `/pricing`; select **P001** | `docs/report/figures/screenshots/pricing-p001.png` | Recommendation card (current ₹3.28 → recommended ₹3.77, +7.69% revenue, binding constraint MAX_CHANGE), revenue bar chart, LLM explanation panel. |
 | Figure 14 | Pricing View — Product P023 | On `/pricing`, select **P023** | `docs/report/figures/screenshots/pricing-p023.png` | Recommendation card and explanation panel for a product in a different category to P001. |
 | Figure 15 | Pricing View — Product P027 | On `/pricing`, select **P027** | `docs/report/figures/screenshots/pricing-p027.png` | Recommendation card and explanation panel for a third product, ideally one with a different binding constraint to illustrate constraint diversity. |
 

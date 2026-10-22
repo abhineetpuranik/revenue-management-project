@@ -65,7 +65,8 @@
   }
 }
 
-.cell--number {
+.cell--number,
+.data-table th.cell--number {
   text-align: right;
 }
 

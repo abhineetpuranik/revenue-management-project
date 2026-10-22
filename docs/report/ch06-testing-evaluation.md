@@ -217,7 +217,7 @@ finds the same partition regardless of starting point.
 Source: `evaluation/results/segmentation_rfm_profile.csv` (means computed over
 1 000 customers, by predicted segment label).
 
-| Segment | Customers | Mean recency (days) | Mean frequency | Mean monetary (£) |
+| Segment | Customers | Mean recency (days) | Mean frequency | Mean monetary (₹) |
 |---|---|---|---|---|
 | high_value | 160 | 1.02 | 1 037.05 | 58 087.23 |
 | regular | 346 | 1.16 | 851.70 | 29 086.92 |

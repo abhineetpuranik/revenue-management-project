@@ -4,7 +4,7 @@ flowchart TD
         P2["Price dynamics\nPRICE_CHANGE_INTERVAL_DAYS=14\nPRICE_CHANGE_PROB=0.60\nPRICE_CHANGE_STD_FRAC=0.08\nPRICE_MIN_FRAC=0.70, PRICE_MAX_FRAC=1.40"]
         P3["Promotions\nPROMO_PROB=0.05\nPROMO_DISCOUNT_MIN=0.05\nPROMO_DISCOUNT_MAX=0.25\nPROMO_DEMAND_UPLIFT=1.20"]
         P4["Elasticity anchors by category\nStaples=−0.5 (σ=0.10, n=12)\nPersonal Care=−1.0 (σ=0.15, n=10)\nElectronics=−1.5 (σ=0.20, n=8)\nClothing=−1.8 (σ=0.20, n=10)\nImpulse=−2.0 (σ=0.25, n=10)"]
-        P5["Customer segment weights\nhigh_value=0.15 (rate=0.40, basket=£85)\nregular=0.35 (rate=0.20, basket=£40)\noccasional=0.30 (rate=0.07, basket=£25)\nat_risk=0.20 (rate=0.03, basket=£15)"]
+        P5["Customer segment weights\nhigh_value=0.15 (rate=0.40, basket=₹85)\nregular=0.35 (rate=0.20, basket=₹40)\noccasional=0.30 (rate=0.07, basket=₹25)\nat_risk=0.20 (rate=0.03, basket=₹15)"]
     end
 
     subgraph Base["generate_base_tables.py"]

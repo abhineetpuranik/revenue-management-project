@@ -48,7 +48,7 @@ Total: 50 products. Each product's `true_elasticity` is drawn as `N(anchor, nois
 
 Four customer segments are defined with true behavioural parameters. Each customer is assigned to one segment at generation time; the assignment is stored in `revenue_management_gt.gt_customer_segment`.
 
-| Segment | True Weight | Purchase Rate (per day) | Basket Mean (£) | Basket Std (£) |
+| Segment | True Weight | Purchase Rate (per day) | Basket Mean (₹) | Basket Std (₹) |
 |---|---|---|---|---|
 | `high_value` | 0.15 (15%) | 0.40 | 85.00 | 20.00 |
 | `regular` | 0.35 (35%) | 0.20 | 40.00 | 12.00 |
@@ -92,7 +92,7 @@ Source: `data-pipeline/pricing/pricing_config.py`
 | `MIN_MARGIN_PCT` | 0.10 | Minimum acceptable margin: `(price − unit_cost) / price ≥ 0.10` |
 | `MAX_PRICE_CHANGE_PCT` | 0.15 | Maximum price move from current price: `|change| ≤ 15%` |
 | `PRICE_STEP_PCT` | 0.01 | Grid resolution: candidate prices are generated in 1% steps |
-| `REVENUE_TIE_TOLERANCE` | 0.001 | Two candidates are considered tied if revenues differ by less than £0.001 |
+| `REVENUE_TIE_TOLERANCE` | 0.001 | Two candidates are considered tied if revenues differ by less than ₹0.001 |
 | `ALLOW_EXTRAPOLATION` | False | Candidate prices outside the product's historical price range are rejected |
 | `PRICE_RANGE_TOLERANCE_PCT` | 0.0 | No tolerance added to the historical price range boundary |
 | `PRICE_DECIMALS` | 2 | Candidate prices are rounded to 2 decimal places |
@@ -247,7 +247,7 @@ The Forecast view displays the weekly demand time series for a selected product,
 5. The MAPE/RMSE/MAE tiles and model comparison table display stored metadata from `models/artifacts/metadata.json`.
 
 **Product examples:**
-- **P001** (Staples, current price £3.28, elasticity −0.47): low elasticity; relatively stable demand; the Pricing view recommends a price increase to £3.77.
+- **P001** (Staples, current price ₹3.28, elasticity −0.47): low elasticity; relatively stable demand; the Pricing view recommends a price increase to ₹3.77.
 - **P042** (Impulse, high elasticity −2.54): more volatile demand curve reflecting high price sensitivity; the Pricing view recommends a price cut to increase revenue.
 
 #### Segments View (`/segments`)
@@ -274,7 +274,7 @@ The Pricing view displays the pricing recommendation for a selected product, alo
 5. The recommendations table at the bottom lists all 50 products; use the category filter or click any row to select a product.
 
 **Product examples:**
-- **P001** (Staples, £3.28 → £3.77, elasticity −0.47): price-inelastic; a 14.9% price increase reduces demand by only ~6%, raising weekly revenue from £1 344 to £1 448 (+7.7%). Binding constraint: `MAX_CHANGE`.
+- **P001** (Staples, ₹3.28 → ₹3.77, elasticity −0.47): price-inelastic; a 14.9% price increase reduces demand by only ~6%, raising weekly revenue from ₹1 344 to ₹1 448 (+7.7%). Binding constraint: `MAX_CHANGE`.
 - **P042** (Impulse, elasticity −2.54): price-elastic; the model recommends a price cut because the demand increase more than offsets the lower unit price, raising total revenue.
 
 ### C.5 Troubleshooting
