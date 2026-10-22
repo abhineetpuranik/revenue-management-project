@@ -1,4 +1,4 @@
-PRICE_DECIMALS: int = RANDOM_SEED: int = 42
+RANDOM_SEED: int = 42
 
 RAW_DATA_DIR: str = "data/raw"
 
