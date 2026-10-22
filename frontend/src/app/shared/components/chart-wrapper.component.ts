@@ -18,14 +18,17 @@ import {
 } from '@angular/core';
 import {
   ArcElement,
+  BarController,
   BarElement,
   CategoryScale,
   Chart,
   ChartConfiguration,
   ChartType,
+  DoughnutController,
   Filler,
   Legend,
   LinearScale,
+  LineController,
   LineElement,
   PointElement,
   Title,
@@ -34,6 +37,9 @@ import {
 
 // Register all Chart.js components used across the app (called once at import time)
 Chart.register(
+  LineController,
+  BarController,
+  DoughnutController,
   CategoryScale,
   LinearScale,
   PointElement,
