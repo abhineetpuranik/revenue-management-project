@@ -15,7 +15,7 @@ COST_RATIO: dict[str, float] = {
 ALLOW_EXTRAPOLATION: bool = False
 PRICE_RANGE_TOLERANCE_PCT: float = 0.0
 
-PRICE_DECIMALS: int = 2
+PRICE_DECIMALS: int = 0
 
 REVENUE_TIE_TOLERANCE: float = 0.001
 

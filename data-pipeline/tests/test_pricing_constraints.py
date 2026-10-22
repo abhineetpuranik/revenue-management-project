@@ -53,8 +53,8 @@ def test_unreliable_elasticity_allows_only_current_price():
 
 
 def _state(**over):
-    base = dict(product_id="P1", current_price=10.0, unit_cost=5.0, hist_min_price=8.0,
-                hist_max_price=12.0, reliable_flag=1)
+    base = dict(product_id="P1", current_price=1000.0, unit_cost=500.0, hist_min_price=800.0,
+                hist_max_price=1200.0, reliable_flag=1)
     base.update(over)
     return pd.DataFrame([base])
 
@@ -62,8 +62,8 @@ def _state(**over):
 def test_grid_spans_band_and_includes_current():
     steps = candidate_steps(0.15, 0.01)
     assert steps.min() == -15 and steps.max() == 15 and 0 in steps
-    c = generate_candidates(_state(current_price=3.37))
-    assert 3.37 in c["candidate_price"].values
+    c = generate_candidates(_state(current_price=337.0))
+    assert 337.0 in c["candidate_price"].values
     assert c["change_pct"].abs().max() <= 0.15 + 1e-12
 
 
@@ -73,11 +73,11 @@ def test_apply_constraints_marks_reasons():
     row = out.set_index("step")
     assert row.loc[0, "passes_all"] == 1 and row.loc[0, "is_current"] == 1
     assert row.loc[-15, "passes_all"] == 1 and row.loc[15, "passes_all"] == 1
-    st2 = _state(hist_min_price=9.5, hist_max_price=10.5)
+    st2 = _state(hist_min_price=950.0, hist_max_price=1050.0)
     row2 = apply_constraints(generate_candidates(st2), st2).set_index("step")
     assert row2.loc[-15, "failed_reasons"] == "PRICE_RANGE"
     assert row2.loc[15, "failed_reasons"] == "PRICE_RANGE"
-    st3 = _state(unit_cost=8.0)
+    st3 = _state(unit_cost=800.0)
     row3 = apply_constraints(generate_candidates(st3), st3).set_index("step")
     assert row3.loc[-15, "failed_reasons"] == "MARGIN"
     assert row3.loc[-11, "failed_reasons"] == ""
@@ -87,9 +87,9 @@ def test_apply_constraints_marks_reasons():
 
 
 def test_passing_rows_satisfy_every_rule():
-    st = _state(current_price=10.0, unit_cost=9.2, hist_min_price=9.0, hist_max_price=11.0)
+    st = _state(current_price=1000.0, unit_cost=920.0, hist_min_price=900.0, hist_max_price=1100.0)
     out = apply_constraints(generate_candidates(st), st)
     ok = out[out["passes_all"] == 1]
-    assert ((ok["candidate_price"] - 9.2) / ok["candidate_price"] >= 0.10 - 1e-9).all()
-    assert ok["candidate_price"].between(9.0, 11.0).all()
+    assert ((ok["candidate_price"] - 920.0) / ok["candidate_price"] >= 0.10 - 1e-9).all()
+    assert ok["candidate_price"].between(900.0, 1100.0).all()
     assert (out["passes_all"] == 0).any()

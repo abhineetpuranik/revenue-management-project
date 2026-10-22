@@ -6,6 +6,7 @@ import pandas as pd
 from data_generation.config import (
     FESTIVAL_DEMAND_UPLIFT,
     MIN_EXPECTED_DEMAND,
+    PRICE_DECIMALS,
     PROMO_DEMAND_UPLIFT,
 )
 
@@ -52,7 +53,7 @@ def generate_sales(
 
         price_ratio = prices / base_price
 
-        price_at_sale = np.round(prices * (1.0 - discount_pct), 2)
+        price_at_sale = np.round(prices * (1.0 - discount_pct), PRICE_DECIMALS)
 
         festival_mult = 1.0 + (FESTIVAL_DEMAND_UPLIFT - 1.0) * festival_flag
         promo_mult    = np.where(is_promo, PROMO_DEMAND_UPLIFT, 1.0)

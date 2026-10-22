@@ -1,47 +1,47 @@
-RANDOM_SEED: int = 42
+PRICE_DECIMALS: int = RANDOM_SEED: int = 42
 
 RAW_DATA_DIR: str = "data/raw"
 
 
 NUM_PRODUCTS: int = 50
-
+PRICE_DECIMALS: int = 0
 
 CATEGORIES: dict = {
     "Staples": {
-        "price_min": 0.50,
-        "price_max": 5.00,
+        "price_min": 50,
+        "price_max": 500,
         "demand_mean": 40,
         "elasticity_anchor": -0.5,
         "elasticity_noise_std": 0.10,
         "product_count": 12,
     },
     "Personal Care": {
-        "price_min": 2.00,
-        "price_max": 15.00,
+        "price_min": 200,
+        "price_max": 1500,
         "demand_mean": 20,
         "elasticity_anchor": -1.0,
         "elasticity_noise_std": 0.15,
         "product_count": 10,
     },
     "Electronics": {
-        "price_min": 50.00,
-        "price_max": 500.00,
+        "price_min": 5000,
+        "price_max": 50000,
         "demand_mean": 5,
         "elasticity_anchor": -1.5,
         "elasticity_noise_std": 0.20,
         "product_count": 8,
     },
     "Clothing": {
-        "price_min": 10.00,
-        "price_max": 80.00,
+        "price_min": 1000,
+        "price_max": 8000,
         "demand_mean": 10,
         "elasticity_anchor": -1.8,
         "elasticity_noise_std": 0.20,
         "product_count": 10,
     },
     "Impulse": {
-        "price_min": 0.50,
-        "price_max": 8.00,
+        "price_min": 50,
+        "price_max": 800,
         "demand_mean": 25,
         "elasticity_anchor": -2.0,
         "elasticity_noise_std": 0.25,

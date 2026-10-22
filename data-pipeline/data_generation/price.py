@@ -7,6 +7,7 @@ from data_generation.config import (
     PRICE_CHANGE_INTERVAL_DAYS,
     PRICE_CHANGE_PROB,
     PRICE_CHANGE_STD_FRAC,
+    PRICE_DECIMALS,
     PRICE_MAX_FRAC,
     PRICE_MIN_FRAC,
     PROMO_DEMAND_UPLIFT,
@@ -44,7 +45,7 @@ def generate_prices(
                 if rng.random() < PRICE_CHANGE_PROB:
                     new_price = rng.normal(loc=current_price, scale=price_std)
                     new_price = float(np.clip(new_price, price_floor, price_ceil))
-                    current_price = round(new_price, 2)
+                    current_price = round(new_price, PRICE_DECIMALS)
             prices[i] = current_price
 
         promo_mask = rng.random(n_dates) < PROMO_PROB
@@ -58,7 +59,7 @@ def generate_prices(
             {
                 "product_id":   pid,
                 "date":         dates,
-                "price":        np.round(prices, 2),
+                "price":        np.round(prices, PRICE_DECIMALS),
                 "is_promo":     promo_mask,
                 "discount_pct": np.round(discount_pct, 4),
             }

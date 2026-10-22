@@ -1,8 +1,7 @@
 import numpy as np
 import pandas as pd
 
-from data_generation.config import CATEGORIES
-
+from data_generation.config import CATEGORIES, PRICE_DECIMALS
 
 def generate_products(rng: np.random.Generator) -> pd.DataFrame:
     rows: list[dict] = []
@@ -13,7 +12,7 @@ def generate_products(rng: np.random.Generator) -> pd.DataFrame:
             pid = f"P{product_counter:03d}"
 
             base_price = round(
-                float(rng.uniform(cfg["price_min"], cfg["price_max"])), 2
+                float(rng.uniform(cfg["price_min"], cfg["price_max"])), PRICE_DECIMALS
             )
 
             base_demand = int(rng.poisson(cfg["demand_mean"]))
