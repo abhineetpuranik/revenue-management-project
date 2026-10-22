@@ -15,8 +15,8 @@ import type { PricingRecommendation } from '../../core/models/api.models';
 import { CardComponent } from '../../shared/components/card.component';
 import { ChartWrapperComponent } from '../../shared/components/chart-wrapper.component';
 
-/** Currency symbol — taken from api.md glossary (monetary = "Total spend (£)"). */
-const CURRENCY_SYMBOL = '£';
+/** Currency symbol — taken from api.md glossary (monetary = "Total spend (₹)"). */
+const CURRENCY_SYMBOL = '₹';
 
 @Component({
   selector: 'app-recommendation-card',
@@ -261,7 +261,7 @@ export class RecommendationCardComponent {
             callbacks: {
               label: (item) => {
                 const val = item.parsed.y;
-                return ` ${item.dataset.label}: £${val != null ? val.toFixed(2) : '—'}`;
+                return ` ${item.dataset.label}: ₹${val != null ? val.toFixed(2) : '—'}`;
               },
             },
           },
@@ -275,7 +275,7 @@ export class RecommendationCardComponent {
             grid: { color: 'rgba(0,0,0,0.06)' },
             ticks: {
               font: { family: "'Space Mono', monospace", size: 10 },
-              callback: (val) => `£${val}`,
+              callback: (val) => `₹${val}`,
             },
             title: {
               display: true,

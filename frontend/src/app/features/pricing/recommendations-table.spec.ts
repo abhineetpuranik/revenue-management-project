@@ -65,8 +65,8 @@ describe('RecommendationsTableComponent', () => {
     expect(cells.length).toBeGreaterThan(0);
     expect(fixture.nativeElement.textContent).toContain('P001');
     expect(fixture.nativeElement.textContent).toContain('Staples');
-    expect(fixture.nativeElement.textContent).toContain('£3.28');
-    expect(fixture.nativeElement.textContent).toContain('£3.77');
+    expect(fixture.nativeElement.textContent).toContain('₹3.28');
+    expect(fixture.nativeElement.textContent).toContain('₹3.77');
   });
 
   it('renders availability badge — available', () => {

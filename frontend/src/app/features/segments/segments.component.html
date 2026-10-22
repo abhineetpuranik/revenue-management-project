@@ -42,14 +42,15 @@
         <table class="data-table" aria-label="Segment summary table">
           <thead>
             <tr>
+                        
               <th class="mono">Segment</th>
               <th class="mono cell--number">Customers</th>
-              <th class="mono cell--number">Avg Recency</th>
-              <th class="mono cell--number">Avg Frequency</th>
-              <th class="mono cell--number">Avg Spend ₹</th>            
               <th class="mono">Share</th>
               <th class="mono">Revenue %</th>
-             
+              <th class="mono cell--number">Avg Recency</th>
+              <th class="mono cell--number">Avg Frequency</th>
+              <th class="mono cell--number">Avg Spend ₹</th>
+            
             </tr>
           </thead>
           <tbody>
@@ -85,7 +86,7 @@
                 </td>
                 <td class="mono cell--number">{{ formatNum(seg.mean_recency_days, 1) }}d</td>
                 <td class="mono cell--number">{{ Math.round(seg.mean_frequency).toLocaleString() }}</td>
-                <td class="mono cell--number">£{{ formatNum(seg.mean_monetary, 0) }}</td>
+                <td class="mono cell--number">₹{{ formatNum(seg.mean_monetary, 0) }}</td>
               </tr>
             }
           </tbody>
@@ -149,7 +150,7 @@
         </div>
         <div class="customer-field">
           <span class="customer-field__label mono">Monetary</span>
-          <span class="customer-field__value mono">£{{ formatNum(lookupResult()!.monetary, 2) }}</span>
+          <span class="customer-field__value mono">₹{{ formatNum(lookupResult()!.monetary, 2) }}</span>
         </div>
       </div>
     }
@@ -201,7 +202,7 @@
                 </td>
                 <td class="mono cell--number">{{ c.recency_days }}d</td>
                 <td class="mono cell--number">{{ c.frequency.toLocaleString() }}</td>
-                <td class="mono cell--number">£{{ formatNum(c.monetary, 2) }}</td>
+                <td class="mono cell--number">₹{{ formatNum(c.monetary, 2) }}</td>
               </tr>
             }
           </tbody>

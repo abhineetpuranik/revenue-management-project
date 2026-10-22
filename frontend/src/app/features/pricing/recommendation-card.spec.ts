@@ -50,8 +50,8 @@ describe('RecommendationCardComponent', () => {
     fixture.componentRef.setInput('recommendation', makeRec());
     fixture.detectChanges();
     const el: HTMLElement = fixture.nativeElement;
-    expect(el.textContent).toContain('£3.28');
-    expect(el.textContent).toContain('£3.77');
+    expect(el.textContent).toContain('₹3.28');
+    expect(el.textContent).toContain('₹3.77');
   });
 
   it('shows INCREASE tag when recommended > current', () => {
@@ -139,7 +139,7 @@ describe('RecommendationCardComponent', () => {
     expect(noRec.nativeElement.textContent).toContain('No recommendation available');
     expect(noRec.nativeElement.textContent).toContain('NO_FEASIBLE_PRICE');
     // Still shows current price
-    expect(noRec.nativeElement.textContent).toContain('£3.28');
+    expect(noRec.nativeElement.textContent).toContain('₹3.28');
   });
 
   it('shows binding constraint when present', () => {

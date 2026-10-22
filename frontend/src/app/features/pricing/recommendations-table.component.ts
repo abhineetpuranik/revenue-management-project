@@ -18,7 +18,7 @@ import { EmptyStateComponent } from '../../shared/components/empty-state.compone
 import { ErrorStateComponent } from '../../shared/components/error-state.component';
 import { LoadingStateComponent } from '../../shared/components/loading-state.component';
 
-const CURRENCY_SYMBOL = '£';
+const CURRENCY_SYMBOL = '₹';
 
 @Component({
   selector: 'app-recommendations-table',

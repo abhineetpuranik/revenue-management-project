@@ -121,7 +121,7 @@ export class ProductSelectComponent {
   loading = input<boolean>(false);
   error = input<string | null>(null);
   selectedProductId = input.required<string>();
-  currencySymbol = input<string>('£');
+  currencySymbol = input<string>('₹');
 
   select = output<string>();
   retry = output<void>();
